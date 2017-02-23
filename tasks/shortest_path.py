@@ -43,9 +43,10 @@ def train(ntm, config, sess):
             ntm.end_symbol: end_symbol
         })
 
-        _, cost, _, outputs = sess.run([ntm.optims[seq_length],
-                               ntm.get_loss(seq_length),
-                               ntm.global_step, ntm.get_output_logits(seq_length)], feed_dict=feed_dict)
+        _, cost, _, outputs = sess.run([ntm.optim,
+                                        ntm.get_loss(),
+                                        ntm.global_step,
+                                        ntm.mask_full], feed_dict=feed_dict)
 
         if idx % print_interval == 0:
             print(

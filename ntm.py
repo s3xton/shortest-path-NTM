@@ -13,7 +13,7 @@ import os
 from utils import progress
 
 def softmax_loss_function(labels, inputs):
-  return tf.nn.sigmoid_cross_entropy_with_logits(labels=labels, logits=inputs)
+    return tf.nn.sigmoid_cross_entropy_with_logits(labels=labels, logits=inputs)
 
 def sp_loss_function(labels, inputs):
 
@@ -72,6 +72,8 @@ class NTM(object):
         self.outputs = []
         self.output_logits = []
         self.true_outputs = []
+        self.answer = []
+
 
         self.prev_states = {}
         self.input_states = defaultdict(list)
@@ -82,9 +84,9 @@ class NTM(object):
         self.end_symbol = tf.placeholder(tf.float32, [self.cell.input_dim],
                                          name='end_symbol')
 
-        self.losses = {}
-        self.optims = {}
-        self.grads = {}
+        self.losses = 0
+        self.optim = 0
+        self.grads = []
 
         self.saver = None
         self.params = None
@@ -124,82 +126,73 @@ class NTM(object):
                 self.outputs.append(output)
                 self.prev_states[seq_length] = prev_state
 
-            true_tensor = stack(self.true_ouputs)
-            mask = tf.sign(tf.reduce_max(tf.abs(self._true_tensor), 1))
-            out_tensor = stack(self.output_logits)
-            
-            answer_tensor = tf.logical_and(out_tensor, mask)
-            self.output_logits = tf.unstack(answer_tensor)
+            print(" [*] Constructing mask")
+            out_stacked = tf.stack(self.output_logits)
+            true_stacked = tf.stack(self.true_outputs)
 
-            if not forward_only:
-                for seq_length in range(self.min_length, self.max_length + 1):
-                    print(" [*] Building a loss model for seq_length %s" % seq_length)
+            self.mask = tf.sign(tf.reduce_max(tf.abs(true_stacked), reduction_indices=1))
+            # So *very* hacky, but it works
+            self.mask_full = tf.transpose(tf.reshape(tf.tile(self.mask, tf.constant([20])), [20, 3]))
+            answer_stacked = tf.multiply(out_stacked, self.mask_full)
+            self.answer = tf.unstack(answer_stacked)
+    
+            print(" [*] Building a loss model for max seq_length %s" % seq_length)
 
-                    self.loss = sequence_loss(
-                        logits=self.output_logits,
-                        targets=self.true_outputs,
-                        weights=[1] * self.max_length,#seq_length,
-                        average_across_timesteps=False,
-                        average_across_batch=False,
-                        softmax_loss_function=sp_loss_function)
 
-                    self.losses[seq_length] = loss
+            self.loss = sequence_loss(
+                logits=self.answer,
+                targets=self.true_outputs,
+                weights=[1] * self.max_length,#seq_length,
+                average_across_timesteps=False,
+                average_across_batch=False,
+                softmax_loss_function=sp_loss_function)
 
-                    if not self.params:
-                        self.params = tf.trainable_variables()
 
-                    # grads, norm = tf.clip_by_global_norm(
-                    #                  tf.gradients(loss, self.params), 5)
+            if not self.params:
+                self.params = tf.trainable_variables()
 
-                    grads = []
-                    for grad in tf.gradients(loss, self.params):
-                        if grad is not None:
-                            grads.append(tf.clip_by_value(grad,
-                                                          self.min_grad,
-                                                          self.max_grad))
-                        else:
-                            grads.append(grad)
+            # grads, norm = tf.clip_by_global_norm(
+            #                  tf.gradients(loss, self.params), 5)
 
-                    self.grads[seq_length] = grads
-                    opt = tf.train.RMSPropOptimizer(self.lr,
-                                                    decay=self.decay,
-                                                    momentum=self.momentum)
+            print("  [*] Generating gradients")
+            grads = []
+            for grad in tf.gradients(self.loss, self.params):
+                if grad is not None:
+                    grads.append(tf.clip_by_value(grad,
+                                                  self.min_grad,
+                                                  self.max_grad))
+                else:
+                    grads.append(grad)
 
-                    reuse = seq_length != self.min_length
-                    with tf.variable_scope(tf.get_variable_scope(), reuse=reuse):
-                        self.optims[seq_length] = opt.apply_gradients(
-                            zip(grads, self.params),
-                            global_step=self.global_step)
+            print("  [*] Building optimiser")
+            self.grads = grads
+            opt = tf.train.RMSPropOptimizer(self.lr,
+                                            decay=self.decay,
+                                            momentum=self.momentum)
+
+            with tf.variable_scope(tf.get_variable_scope(), reuse=False):
+                self.optim = opt.apply_gradients(
+                    zip(grads, self.params),
+                    global_step=self.global_step)
 
         model_vars = \
             [v for v in tf.global_variables() if v.name.startswith(self.scope)]
         self.saver = tf.train.Saver(model_vars)
         print(" [*] Build a NTM model finished")
 
-    def get_output_logits(self, seq_length):
-        return self.output_logits[0:seq_length]
+    def get_output_logits(self):
+        return self.output_logits
 
     #def get_prediction(self, seq_length):
      #   labels_a, labels_b = tf.self.output_logits(labels, 2, 0)
 
-    def get_loss(self, seq_length):
+    def get_loss(self):
         """
         if not seq_length in self.outputs:
             self.get_outputs(seq_length)
 
         """
-
-        if not seq_length in self.losses:
-            loss = sequence_loss(
-                logits=self.output_logits[0:seq_length],
-                targets=self.true_outputs[0:seq_length],
-                weights=[1] * seq_length,
-                average_across_timesteps=False,
-                average_across_batch=False,
-                softmax_loss_function=sp_loss_function)
-
-            self.losses[seq_length] = loss
-        return self.losses[seq_length]
+        return self.loss
 
     def get_output_states(self, seq_length):
         zeros = np.zeros(self.cell.input_dim, dtype=np.float32)
@@ -220,13 +213,13 @@ class NTM(object):
                 self.output_logits[seq_length] = output_logits
         return self.output_states[seq_length]
 
-    @property
-    def loss(self):
-        return self.losses[self.cell.depth]
+    #@property
+    #def loss(self):
+    #    return self.losses[self.cell.depth]
 
-    @property
-    def optim(self):
-        return self.optims[self.cell.depth]
+    #@property
+    #def optim(self):
+    #    return self.optims[self.cell.depth]
 
     def save_state(self, state, from_, to=None, is_output=False):
         if is_output:

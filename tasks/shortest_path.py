@@ -30,7 +30,7 @@ def train(ntm, config, sess):
     for idx in range(config.epoch):
         graph_size = random.randint(config.min_size, config.max_size)
 
-        inp_seq, target_seq = graph_util.gen_single(graph_size)
+        inp_seq, target_seq = graph_util.gen_single(graph_size, config.plan_length, config.max_size)
         seq_length = len(inp_seq)
 
         feed_dict = {input_: vec for vec, input_ in zip(inp_seq, ntm.inputs)}
@@ -43,16 +43,15 @@ def train(ntm, config, sess):
             ntm.end_symbol: end_symbol
         })
 
-        _, cost, _, outputs = sess.run([ntm.optim,
+        _, cost, _= sess.run([ntm.optim,
                                         ntm.get_loss(),
-                                        ntm.global_step,
-                                        ntm.mask_full], feed_dict=feed_dict)
+                                        ntm.global_step,], feed_dict=feed_dict)
 
         if idx % print_interval == 0:
             print(
                 "[%5d] %2d: %.10f (%.1fs)"
                 % (idx, seq_length, cost, time.time() - start_time))
-            #print(outputs)
+
 
 
 

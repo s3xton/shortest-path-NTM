@@ -24,9 +24,9 @@ flags.DEFINE_boolean("is_train", False, "True for training, False for testing [F
 flags.DEFINE_boolean("continue_train", None, "True to continue training from saved checkpoint. False for restarting. None for automatic [None]")
 
 # My config vars
-flags.DEFINE_integer("min_size", 2, "Minimum graph size")
-flags.DEFINE_integer("max_size", 2, "Maximum graph size")
-flags.DEFINE_integer("plan_length", 0, "Length of planning phase")
+flags.DEFINE_integer("min_size", 4, "Minimum graph size")
+flags.DEFINE_integer("max_size", 4, "Maximum graph size")
+flags.DEFINE_integer("plan_length", 10, "Length of planning phase")
 FLAGS = flags.FLAGS
 
 

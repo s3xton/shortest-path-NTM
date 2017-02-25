@@ -132,10 +132,10 @@ class NTM(object):
 
             self.mask = tf.sign(tf.reduce_max(tf.abs(true_stacked), reduction_indices=1))
             # So *very* hacky, but it works
-            self.mask_full = tf.transpose(tf.reshape(tf.tile(self.mask, tf.constant([20])), [20, 3]))
+            self.mask_full = tf.transpose(tf.reshape(tf.tile(self.mask, tf.constant([20])), [20, self.max_length]))
             answer_stacked = tf.multiply(out_stacked, self.mask_full)
             self.answer = tf.unstack(answer_stacked)
-    
+
             print(" [*] Building a loss model for max seq_length %s" % seq_length)
 
 
@@ -154,7 +154,7 @@ class NTM(object):
             # grads, norm = tf.clip_by_global_norm(
             #                  tf.gradients(loss, self.params), 5)
 
-            print("  [*] Generating gradients")
+            print(" [*] Generating gradients (slow)")
             grads = []
             for grad in tf.gradients(self.loss, self.params):
                 if grad is not None:
@@ -164,7 +164,7 @@ class NTM(object):
                 else:
                     grads.append(grad)
 
-            print("  [*] Building optimiser")
+            print(" [*] Building optimiser")
             self.grads = grads
             opt = tf.train.RMSPropOptimizer(self.lr,
                                             decay=self.decay,
@@ -183,8 +183,24 @@ class NTM(object):
     def get_output_logits(self):
         return self.output_logits
 
-    #def get_prediction(self, seq_length):
-     #   labels_a, labels_b = tf.self.output_logits(labels, 2, 0)
+    def get_prediction(self):
+        output_a, output_b = tf.split(self.answer, 2, 1)
+
+        pred_a = tf.nn.softmax(output_a)
+        pred_b = tf.nn.softmax(output_b)
+
+        return pred_a
+
+    def get_error(self):
+        pred_a, pred_b = self.get_prediction()
+        target_a, target_b = tf.split(self.true_outputs, 2, 1)
+
+        mistake_a = tf.not_equal(tf.argmax(target_a, 1), tf.argmax(pred_a, 1))
+        mistake_b = tf.not_equal(tf.argmax(target_b, 1), tf.argmax(pred_b, 1))
+
+        mistake = tf.logical_or(mistake_a, mistake_b)
+        return tf.cast(mistake, tf.float32)
+
 
     def get_loss(self):
         """

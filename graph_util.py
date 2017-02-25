@@ -150,12 +150,15 @@ def build_dataset(set_size, min_node, max_node):
                            min_node,
                            max_node)
 
-def gen_single(graph_size):
-    graph = gr.Graph(graph_size)
+def gen_single(graph_size, plan_length, max_graph_size):
 
+    # Make a graph, terminal nodes and path
+    graph = gr.Graph(graph_size)
     start, end = random.sample(graph.nodes, 2)
     path = shortest_path(graph, start, end)
 
+    # Construct description phase
+    max_desc_length = max_graph_size * (max_graph_size - 1) / 2
     encoded_graph = []
     for edge in graph.edge_list:
         node_a = decimal_to_onehot(edge[0])
@@ -163,24 +166,34 @@ def gen_single(graph_size):
         encoded_edge = [0, 0] + node_a + node_b
         encoded_graph.append(encoded_edge)
 
-    encoded_query = [[0, 1] + decimal_to_onehot(start) + decimal_to_onehot(end)]
+    pad_length = max_desc_length - len(encoded_graph)
+    desc_phase = encoded_graph + ([[0] * 22] * int(pad_length))
 
+    # Encode the query phase
+    query_phase = [[0, 1] + decimal_to_onehot(start) + decimal_to_onehot(end)]
+
+    # Construct the plan phase
+    plan_phase = [[1, 0] + [0] * 20] * plan_length
+
+    # Encode the answer phase
     answer_phase = [[1, 1] + [0] * 20] * len(path)
 
-    _input = encoded_graph + encoded_query + answer_phase
+    # Construct the final input with padding
+    _input = desc_phase + query_phase + plan_phase + answer_phase
+    max_seq_length = max_desc_length + 1 + plan_length + (max_graph_size - 1)
+    pad_length = max_seq_length - len(_input)
+    _input += [[0] * 22] * int(pad_length)
 
+    # Construct the target
     encoded_path = []
     for edge in path:
         node_a = decimal_to_onehot(edge[0])
         node_b = decimal_to_onehot(edge[1])
         encoded_path.append(node_a + node_b)
 
-    target = [[0] * 20] * (len(encoded_graph) + 1) + encoded_path
+    target = [[0] * 20] * (len(desc_phase) + 1 + plan_length) + encoded_path + ([[0] * 20] * int(pad_length))
 
     return _input, target
-
-
-
 
 
 def decimal_to_onehot(decimal_digit):

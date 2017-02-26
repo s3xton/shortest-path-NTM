@@ -2,6 +2,7 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
+import functools
 import numpy as np
 import tensorflow as tf
 from collections import defaultdict
@@ -11,6 +12,21 @@ import ntm_cell
 
 import os
 from utils import progress
+
+def lazy_property(function):
+    """
+    Used to annotate functions that we only want computer once. Cached results
+    are then used on subsequent calls.
+    """
+    attribute = '_' + function.__name__
+
+    @property
+    @functools.wraps(function)
+    def wrapper(self):
+        if not hasattr(self, attribute):
+            setattr(self, attribute, function(self))
+        return getattr(self, attribute)
+    return wrapper
 
 def softmax_loss_function(labels, inputs):
     return tf.nn.sigmoid_cross_entropy_with_logits(labels=labels, logits=inputs)
@@ -29,7 +45,7 @@ def sp_loss_function(labels, inputs):
 
 class NTM(object):
     def __init__(self, cell, sess,
-                 min_length, max_length,
+                 min_length, max_length, max_size,
                  test_max_length=120,
                  min_grad=-10, max_grad=+10,
                  lr=1e-4, momentum=0.9, decay=0.95,
@@ -64,15 +80,18 @@ class NTM(object):
         self.min_length = min_length
         self.max_length = max_length
         self._max_length = max_length
+        self.max_size = max_size
 
         if forward_only:
             self.max_length = test_max_length
 
         self.inputs = []
-        self.outputs = []
-        self.output_logits = []
+        self.outputs_train = []
         self.true_outputs = []
         self.answer = []
+
+        self.outputs_test = []
+        self.answer_test = []
 
 
         self.prev_states = {}
@@ -96,15 +115,17 @@ class NTM(object):
 
         self.build_model(forward_only)
 
-    def build_model(self, forward_only, is_copy=False):
+    def build_model(self, forward_only, is_structured=True):
         print(" [*] Building a NTM model")
 
         with tf.variable_scope(self.scope):
             # present start symbol
-            _, _, prev_state = self.cell(self.start_symbol, state=None)
+            _, prev_state = self.cell(self.start_symbol, state=None)
             self.save_state(prev_state, 0, self.max_length)
 
             #zeros = np.zeros(self.cell.input_dim, dtype=np.float32)
+            start_answer = self.max_length - self.max_size + 1
+            prefix = tf.constant([1, 1], np.float32)
 
             tf.get_variable_scope().reuse_variables()
             for seq_length in range(1, self.max_length + 1):
@@ -119,22 +140,59 @@ class NTM(object):
                 self.true_outputs.append(true_output)
 
                 # present inputs
-                output, output_logit, prev_state = self.cell(input_, prev_state)
-                self.save_state(prev_state, seq_length, self.max_length)
+                if is_structured:
+                    if seq_length > start_answer:
+                        if seq_length == start_answer + 1:
+                            prev_state_train = prev_state
+                            prev_state_test = prev_state
 
-                self.output_logits.append(output_logit)
-                self.outputs.append(output)
+                        # For training, use target
+                        s_input = tf.concat([prefix, self.true_outputs[-2]], 0)
+                        output_train, prev_state_train = self.cell(s_input, prev_state_train)
+                        self.outputs_train.append(output_train)
+
+                        # For testing, use previous
+                        # TODO CHECK THIS ACTUALLY WORKS AS INTENDED
+                        out_a, out_b = tf.split(self.outputs_test[-1], 2)
+                        pred_a = tf.arg_max(tf.nn.softmax(out_a), 0)
+                        pred_b = tf.arg_max(tf.nn.softmax(out_b), 0)
+                        in_a = tf.one_hot(9 - pred_a, 10)
+                        in_b = tf.one_hot(9 - pred_b, 10)
+
+                        s_input = tf.concat([prefix, in_a, in_b], 0)
+                        #self.test_predictions.append([pred_a, pred_b])
+                        output_test, prev_state_test = self.cell(s_input, prev_state_test)
+                        self.outputs_test.append(output_test)
+
+
+                    else:
+                        # Everything before the answer phase is the same for both
+                        output, prev_state = self.cell(input_, prev_state)
+                        self.outputs_train.append(output)
+                        self.outputs_test.append(output)
+
+                else:
+                    output, prev_state = self.cell(input_, prev_state)
+                    self.outputs_train.append(output)
+
+                self.save_state(prev_state, seq_length, self.max_length)
                 self.prev_states[seq_length] = prev_state
 
             print(" [*] Constructing mask")
-            out_stacked = tf.stack(self.output_logits)
-            true_stacked = tf.stack(self.true_outputs)
-
-            self.mask = tf.sign(tf.reduce_max(tf.abs(true_stacked), reduction_indices=1))
             # So *very* hacky, but it works
+            true_stacked = tf.stack(self.true_outputs)
+            self.mask = tf.sign(tf.reduce_max(tf.abs(true_stacked), reduction_indices=1))
             self.mask_full = tf.transpose(tf.reshape(tf.tile(self.mask, tf.constant([20])), [20, self.max_length]))
+
+            # Train
+            out_stacked = tf.stack(self.outputs_train)
             answer_stacked = tf.multiply(out_stacked, self.mask_full)
             self.answer = tf.unstack(answer_stacked)
+
+            # Test
+            out_test_stacked = tf.stack(self.outputs_test)
+            answer_test_stacked = tf.multiply(out_test_stacked, self.mask_full)
+            self.answer_test = tf.unstack(answer_test_stacked)
 
             print(" [*] Building a loss model for max seq_length %s" % seq_length)
 
@@ -180,26 +238,28 @@ class NTM(object):
         self.saver = tf.train.Saver(model_vars)
         print(" [*] Build a NTM model finished")
 
-    def get_output_logits(self):
-        return self.output_logits
 
+    @lazy_property
     def get_prediction(self):
         output_a, output_b = tf.split(self.answer, 2, 1)
 
         pred_a = tf.nn.softmax(output_a)
         pred_b = tf.nn.softmax(output_b)
 
-        return pred_a
+        return pred_a, pred_b
 
+    @lazy_property
     def get_error(self):
-        pred_a, pred_b = self.get_prediction()
+        pred_a, pred_b = tf.split(self.answer_test, 2, 1)
         target_a, target_b = tf.split(self.true_outputs, 2, 1)
 
         mistake_a = tf.not_equal(tf.argmax(target_a, 1), tf.argmax(pred_a, 1))
         mistake_b = tf.not_equal(tf.argmax(target_b, 1), tf.argmax(pred_b, 1))
 
         mistake = tf.logical_or(mistake_a, mistake_b)
-        return tf.cast(mistake, tf.float32)
+        error_rate = tf.reduce_max(tf.cast(mistake, tf.float32))
+
+        return error_rate
 
 
     def get_loss(self):

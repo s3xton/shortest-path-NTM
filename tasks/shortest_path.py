@@ -30,7 +30,7 @@ def train(ntm, config, sess):
     for idx in range(config.epoch):
         graph_size = random.randint(config.min_size, config.max_size)
 
-        inp_seq, target_seq = graph_util.gen_single(graph_size, config.plan_length, config.max_size)
+        inp_seq, target_seq, edges = graph_util.gen_single(graph_size, config.plan_length, config.max_size)
         seq_length = len(inp_seq)
 
         feed_dict = {input_: vec for vec, input_ in zip(inp_seq, ntm.inputs)}
@@ -43,14 +43,41 @@ def train(ntm, config, sess):
             ntm.end_symbol: end_symbol
         })
 
-        _, cost, _= sess.run([ntm.optim,
-                                        ntm.get_loss(),
-                                        ntm.global_step,], feed_dict=feed_dict)
+        _, cost = sess.run([ntm.optim,
+                            ntm.get_loss()], feed_dict=feed_dict)
 
         if idx % print_interval == 0:
             print(
                 "[%5d] %2d: %.10f (%.1fs)"
-                % (idx, seq_length, cost, time.time() - start_time))
+                % (idx, edges, cost, time.time() - start_time))
+
+    error_sum = 0.0
+    for idx in range(config.epoch):
+        graph_size = random.randint(config.min_size, config.max_size)
+
+        inp_seq, target_seq, edges = graph_util.gen_single(graph_size, config.plan_length, config.max_size)
+        seq_length = len(inp_seq)
+
+        feed_dict = {input_: vec for vec, input_ in zip(inp_seq, ntm.inputs)}
+        feed_dict.update(
+            {true_output: vec for vec, true_output in zip(target_seq, ntm.true_outputs)}
+        )
+
+        feed_dict.update({
+            ntm.start_symbol: start_symbol,
+            ntm.end_symbol: end_symbol
+        })
+
+        error = sess.run([ntm.get_error], feed_dict=feed_dict)
+        error_sum += error[0]
+
+        if idx % print_interval == 0:
+            print(
+                "[%5d] %.5f"
+                % (idx, error_sum/(idx +1)))
+            print(error)
+
+    print("Final error rate: %.5f" % (error_sum/config.epoch))
 
 
 

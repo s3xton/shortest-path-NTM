@@ -193,7 +193,7 @@ def gen_single(graph_size, plan_length, max_graph_size):
 
     target = [[0] * 20] * (len(desc_phase) + 1 + plan_length) + encoded_path + ([[0] * 20] * int(pad_length))
 
-    return _input, target
+    return _input, target, len(graph.nodes)
 
 
 def decimal_to_onehot(decimal_digit):

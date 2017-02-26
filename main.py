@@ -9,7 +9,7 @@ from utils import pp
 
 flags = tf.app.flags
 flags.DEFINE_string("task", "shortest_path", "Task to run [copy, recall, shortest_path]")
-flags.DEFINE_integer("epoch", 100000, "Epoch to train [100000]")
+flags.DEFINE_integer("epoch", 2000, "Epoch to train [100000]")
 flags.DEFINE_integer("input_dim", 22, "Dimension of input [10]")
 flags.DEFINE_integer("output_dim", 20, "Dimension of output [10]")
 #flags.DEFINE_integer("min_length", 1, "Minimum length of input sequence [1]")
@@ -39,13 +39,13 @@ def create_ntm(config, sess, **ntm_args):
         write_head_size=config.write_head_size,
         read_head_size=config.read_head_size)
     scope = ntm_args.pop('scope', 'NTM-%s' % config.task)
-    
+
     # Description + query + plan + answer
     min_length = (config.min_size - 1) + 1 + config.plan_length + (config.min_size - 1)
     max_length = int(((config.max_size * (config.max_size - 1)/2) +
                   1 + config.plan_length + (config.max_size - 1)))
     ntm = NTM(
-        cell, sess, min_length, max_length,
+        cell, sess, min_length, max_length, config.max_size,
         test_max_length=config.test_max_length, scope=scope, **ntm_args)
     return cell, ntm
 
@@ -53,7 +53,7 @@ def create_ntm(config, sess, **ntm_args):
 def main(_):
     pp.pprint(flags.FLAGS.__flags)
 
-    #with tf.device('/cpu:0'), tf.Session() as sess:
+    #with tf.device('/gpu:0'), tf.Session() as sess:
     with tf.Session() as sess:
         try:
             task = importlib.import_module('tasks.%s' % FLAGS.task)

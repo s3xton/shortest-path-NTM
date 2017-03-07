@@ -13,6 +13,14 @@ def train(ntm, config, sess):
     if not os.path.isdir(config.checkpoint_dir):
         raise Exception(" [!] Directory %s not found" % config.checkpoint_dir)
 
+    if not os.path.isdir(config.summary_dir):
+        raise Exception(" [!] Directory %s not found" % config.summary_dir)
+
+    task_dir = "%s_%s_%s" % (config.task, config.min_size, config.max_size)
+    summary_dir = os.path.join(config.summary_dir, task_dir)
+
+    train_writer = tf.summary.FileWriter(summary_dir + '/train', sess.graph)
+
     # delimiter flag for start and end
     start_symbol = np.zeros([config.input_dim], dtype=np.float32)
     start_symbol[0] = 1
@@ -43,13 +51,20 @@ def train(ntm, config, sess):
             ntm.end_symbol: end_symbol
         })
 
-        _, cost = sess.run([ntm.optim,
-                            ntm.get_loss()], feed_dict=feed_dict)
+        _, cost, step, summary = sess.run([ntm.optim,
+                                           ntm.get_loss(),
+                                           ntm.global_step,
+                                           ntm.merged], feed_dict=feed_dict)
+
+        if idx % 100 == 0:
+            ntm.save(config.checkpoint_dir, config.task, step)
+            
 
         if idx % print_interval == 0:
             print(
                 "[%5d] %2d: %.10f (%.1fs)"
-                % (idx, edges, cost, time.time() - start_time))
+                % (step, edges, cost, time.time() - start_time))
+            train_writer.add_summary(summary, step)
 
     error_sum = 0.0
     for idx in range(config.epoch):

@@ -20,6 +20,7 @@ flags.DEFINE_integer("write_head_size", 1, "The number of write head [1]")
 flags.DEFINE_integer("read_head_size", 1, "The number of read head [1]")
 flags.DEFINE_integer("test_max_length", 120, "Maximum length of output sequence [120]")
 flags.DEFINE_string("checkpoint_dir", "checkpoint", "Directory name to save the checkpoints [checkpoint]")
+flags.DEFINE_string("summary_dir", "summary", "Directory name to save the summaries [summary]")
 flags.DEFINE_boolean("is_train", False, "True for training, False for testing [False]")
 flags.DEFINE_boolean("continue_train", None, "True to continue training from saved checkpoint. False for restarting. None for automatic [None]")
 
@@ -45,7 +46,7 @@ def create_ntm(config, sess, **ntm_args):
     max_length = int(((config.max_size * (config.max_size - 1)/2) +
                   1 + config.plan_length + (config.max_size - 1)))
     ntm = NTM(
-        cell, sess, min_length, max_length, config.max_size,
+        cell, sess, min_length, max_length, config.min_size, config.max_size,
         test_max_length=config.test_max_length, scope=scope, **ntm_args)
     return cell, ntm
 

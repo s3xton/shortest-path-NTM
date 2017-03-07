@@ -45,7 +45,7 @@ def sp_loss_function(labels, inputs):
 
 class NTM(object):
     def __init__(self, cell, sess,
-                 min_length, max_length, max_size,
+                 min_length, max_length, min_size, max_size,
                  test_max_length=120,
                  min_grad=-10, max_grad=+10,
                  lr=1e-4, momentum=0.9, decay=0.95,
@@ -80,6 +80,7 @@ class NTM(object):
         self.min_length = min_length
         self.max_length = max_length
         self._max_length = max_length
+        self.min_size = min_size
         self.max_size = max_size
 
         if forward_only:
@@ -205,6 +206,7 @@ class NTM(object):
                 average_across_batch=False,
                 softmax_loss_function=sp_loss_function)
 
+            tf.summary.scalar('loss', self.loss)
 
             if not self.params:
                 self.params = tf.trainable_variables()
@@ -236,6 +238,8 @@ class NTM(object):
         model_vars = \
             [v for v in tf.global_variables() if v.name.startswith(self.scope)]
         self.saver = tf.train.Saver(model_vars)
+        self.merged = tf.summary.merge_all()
+        
         print(" [*] Build a NTM model finished")
 
 
@@ -310,7 +314,7 @@ class NTM(object):
             state_to_add[from_].append(state)
 
     def save(self, checkpoint_dir, task_name, step):
-        task_dir = os.path.join(checkpoint_dir, "%s_%s" % (task_name, self.max_length))
+        task_dir = os.path.join(checkpoint_dir, "%s_%s_%s" % (task_name, self.min_size, self.max_size))
         file_name = "%s_%s.model" % (self.scope, task_name)
 
         if not os.path.exists(task_dir):
@@ -324,7 +328,7 @@ class NTM(object):
     def load(self, checkpoint_dir, task_name, strict=True):
         print(" [*] Reading checkpoints...")
 
-        task_dir = "%s_%s" % (task_name, self._max_length)
+        task_dir = "%s_%s_%s" % (task_name, self.min_size, self.max_size)
         checkpoint_dir = os.path.join(checkpoint_dir, task_dir)
 
         ckpt = tf.train.get_checkpoint_state(checkpoint_dir)
@@ -336,3 +340,5 @@ class NTM(object):
                 raise Exception(" [!] Testing, but %s not found" % checkpoint_dir)
             else:
                 print(' [!] Training, but previous training data %s not found' % checkpoint_dir)
+
+        

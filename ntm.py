@@ -186,8 +186,8 @@ class NTM(object):
             self.mask_full = tf.transpose(tf.reshape(tf.tile(self.mask, tf.constant([20])), [20, self.max_length]))
 
             # Train
-            out_stacked = tf.stack(self.outputs_train)
-            answer_stacked = tf.multiply(out_stacked, self.mask_full)
+            self.out_stacked = tf.stack(self.outputs_train)
+            answer_stacked = tf.multiply(self.out_stacked, self.mask_full)
             self.answer = tf.unstack(answer_stacked)
 
             # Test

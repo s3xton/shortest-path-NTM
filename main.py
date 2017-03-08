@@ -9,7 +9,7 @@ from utils import pp
 
 flags = tf.app.flags
 flags.DEFINE_string("task", "shortest_path", "Task to run [copy, recall, shortest_path]")
-flags.DEFINE_integer("epoch", 2000, "Epoch to train [100000]")
+flags.DEFINE_integer("epoch", 20000, "Epoch to train [100000]")
 flags.DEFINE_integer("input_dim", 22, "Dimension of input [10]")
 flags.DEFINE_integer("output_dim", 20, "Dimension of output [10]")
 #flags.DEFINE_integer("min_length", 1, "Minimum length of input sequence [1]")

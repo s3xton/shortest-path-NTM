@@ -38,8 +38,10 @@ def train(ntm, config, sess):
     for idx in range(config.epoch):
         graph_size = random.randint(config.min_size, config.max_size)
 
-        inp_seq, target_seq, edges = graph_util.gen_single(graph_size, config.plan_length, config.max_size)
-        seq_length = len(inp_seq)
+        inp_seq, target_seq, edges = graph_util.gen_single(graph_size,
+                                                           config.plan_length,
+                                                           config.max_size)
+
 
         feed_dict = {input_: vec for vec, input_ in zip(inp_seq, ntm.inputs)}
         feed_dict.update(
@@ -51,27 +53,38 @@ def train(ntm, config, sess):
             ntm.end_symbol: end_symbol
         })
 
-        _, cost, step, summary = sess.run([ntm.optim,
+        _, cost, step, summary, mask, output, answer = sess.run([ntm.optim,
                                            ntm.get_loss(),
                                            ntm.global_step,
-                                           ntm.merged], feed_dict=feed_dict)
+                                           ntm.merged,
+                                           ntm.mask_full,
+                                           ntm.out_stacked,
+                                           ntm.answer], feed_dict=feed_dict)
 
         if idx % 100 == 0:
             ntm.save(config.checkpoint_dir, config.task, step)
-            
 
         if idx % print_interval == 0:
             print(
                 "[%5d] %2d: %.10f (%.1fs)"
                 % (step, edges, cost, time.time() - start_time))
+            print("Input:")
+            print(inp_seq)
+            print("Mask:")
+            print(mask)
+            print("Output:")
+            print(output)
+            print("Answer:")
+            print(answer)
+            
             train_writer.add_summary(summary, step)
+            
 
     error_sum = 0.0
     for idx in range(config.epoch):
         graph_size = random.randint(config.min_size, config.max_size)
 
         inp_seq, target_seq, edges = graph_util.gen_single(graph_size, config.plan_length, config.max_size)
-        seq_length = len(inp_seq)
 
         feed_dict = {input_: vec for vec, input_ in zip(inp_seq, ntm.inputs)}
         feed_dict.update(

@@ -155,12 +155,12 @@ class NTM(object):
                         # For testing, use previous
                         # TODO CHECK THIS ACTUALLY WORKS AS INTENDED
                         out_a, out_b = tf.split(self.outputs_test[-1], 2)
-                        pred_a = tf.arg_max(tf.nn.softmax(out_a), 0)
-                        pred_b = tf.arg_max(tf.nn.softmax(out_b), 0)
-                        in_a = tf.one_hot(9 - pred_a, 10)
-                        in_b = tf.one_hot(9 - pred_b, 10)
+                        pred_a = tf.arg_max(tf.nn.softmax(out_a, name="test_soft_a"), 0, "test_argm_a")
+                        pred_b = tf.arg_max(tf.nn.softmax(out_b, name="test_soft_b"), 0, "test_argm_b")
+                        in_a = tf.one_hot(9 - pred_a, 10, name="one_hot_a")
+                        in_b = tf.one_hot(9 - pred_b, 10, name="one_hot_b")
 
-                        s_input = tf.concat([prefix, in_a, in_b], 0)
+                        s_input = tf.concat([prefix, in_a, in_b], 0, name="input_n+1")
                         #self.test_predictions.append([pred_a, pred_b])
                         output_test, prev_state_test = self.cell(s_input, prev_state_test)
                         self.outputs_test.append(output_test)
@@ -182,8 +182,8 @@ class NTM(object):
             print(" [*] Constructing mask")
             # So *very* hacky, but it works
             true_stacked = tf.stack(self.true_outputs)
-            self.mask = tf.sign(tf.reduce_max(tf.abs(true_stacked), reduction_indices=1))
-            self.mask_full = tf.transpose(tf.reshape(tf.tile(self.mask, tf.constant([20])), [20, self.max_length]))
+            mask = tf.sign(tf.reduce_max(tf.abs(true_stacked), reduction_indices=1))
+            self.mask_full = tf.transpose(tf.reshape(tf.tile(mask, tf.constant([20])), [20, self.max_length]))
 
             # Train
             self.out_stacked = tf.stack(self.outputs_train)

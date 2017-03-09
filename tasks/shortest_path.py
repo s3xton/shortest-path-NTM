@@ -53,13 +53,10 @@ def train(ntm, config, sess):
             ntm.end_symbol: end_symbol
         })
 
-        _, cost, step, summary, mask, output, answer = sess.run([ntm.optim,
+        _, cost, step, summary = sess.run([ntm.optim,
                                            ntm.get_loss(),
                                            ntm.global_step,
-                                           ntm.merged,
-                                           ntm.mask_full,
-                                           ntm.out_stacked,
-                                           ntm.answer], feed_dict=feed_dict)
+                                           ntm.merged], feed_dict=feed_dict)
 
         if idx % 100 == 0:
             ntm.save(config.checkpoint_dir, config.task, step)
@@ -68,17 +65,8 @@ def train(ntm, config, sess):
             print(
                 "[%5d] %2d: %.10f (%.1fs)"
                 % (step, edges, cost, time.time() - start_time))
-            print("Input:")
-            print(inp_seq)
-            print("Mask:")
-            print(mask)
-            print("Output:")
-            print(output)
-            print("Answer:")
-            print(answer)
-            
+                
             train_writer.add_summary(summary, step)
-            
 
     error_sum = 0.0
     for idx in range(config.epoch):

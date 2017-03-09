@@ -160,7 +160,7 @@ class NTM(object):
                         in_a = tf.one_hot(9 - pred_a, 10, name="one_hot_a")
                         in_b = tf.one_hot(9 - pred_b, 10, name="one_hot_b")
 
-                        s_input = tf.concat([prefix, in_a, in_b], 0, name="input_n+1")
+                        s_input = tf.concat([prefix, in_a, in_b], 0, name="input_next")
                         #self.test_predictions.append([pred_a, pred_b])
                         output_test, prev_state_test = self.cell(s_input, prev_state_test)
                         self.outputs_test.append(output_test)

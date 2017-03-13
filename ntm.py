@@ -121,8 +121,9 @@ class NTM(object):
 
         with tf.variable_scope(self.scope):
             # present start symbol
-            _, prev_state = self.cell(self.start_symbol, state=None)
-            self.save_state(prev_state, 0, self.max_length)
+            with tf.name_scope("start_step"):
+                _, prev_state = self.cell(self.start_symbol, state=None)
+            #self.save_state(prev_state, 0, self.max_length)
 
             #zeros = np.zeros(self.cell.input_dim, dtype=np.float32)
             start_answer = self.max_length - self.max_size + 1
@@ -143,57 +144,66 @@ class NTM(object):
                 # present inputs
                 if is_structured:
                     if seq_length > start_answer:
-                        if seq_length == start_answer + 1:
-                            prev_state_train = prev_state
-                            prev_state_test = prev_state
+                        with tf.name_scope("step_answer"):
+                            if seq_length == start_answer + 1:
+                                prev_state_train = prev_state
+                                prev_state_test = prev_state
 
-                        # For training, use target
-                        s_input = tf.concat([prefix, self.true_outputs[-2]], 0)
-                        output_train, prev_state_train = self.cell(s_input, prev_state_train)
-                        self.outputs_train.append(output_train)
+                            with tf.name_scope("train"):
+                                # For training, use target
+                                s_input = tf.concat([prefix, self.true_outputs[-2]], 0)
+                                with tf.name_scope("step"):
+                                    output_train, prev_state_train = self.cell(s_input, prev_state_train)
+                                self.outputs_train.append(output_train)
 
-                        # For testing, use previous
-                        # TODO CHECK THIS ACTUALLY WORKS AS INTENDED
-                        out_a, out_b = tf.split(self.outputs_test[-1], 2)
-                        pred_a = tf.arg_max(tf.nn.softmax(out_a, name="test_soft_a"), 0, "test_argm_a")
-                        pred_b = tf.arg_max(tf.nn.softmax(out_b, name="test_soft_b"), 0, "test_argm_b")
-                        in_a = tf.one_hot(9 - pred_a, 10, name="one_hot_a")
-                        in_b = tf.one_hot(9 - pred_b, 10, name="one_hot_b")
+                            with tf.name_scope("test"):
+                                with tf.name_scope("converter"):
+                                    # For testing, use previous
+                                    # TODO CHECK THIS ACTUALLY WORKS AS INTENDED
+                                    out_a, out_b = tf.split(self.outputs_test[-1], 2)
+                                    pred_a = tf.arg_max(tf.nn.softmax(out_a, name="test_soft_a"), 0, "test_argm_a")
+                                    pred_b = tf.arg_max(tf.nn.softmax(out_b, name="test_soft_b"), 0, "test_argm_b")
+                                    in_a = tf.one_hot(9 - pred_a, 10, name="one_hot_a")
+                                    in_b = tf.one_hot(9 - pred_b, 10, name="one_hot_b")
+                                    s_input = tf.concat([prefix, in_a, in_b], 0, name="input_next")
 
-                        s_input = tf.concat([prefix, in_a, in_b], 0, name="input_next")
-                        #self.test_predictions.append([pred_a, pred_b])
-                        output_test, prev_state_test = self.cell(s_input, prev_state_test)
-                        self.outputs_test.append(output_test)
+                                #self.test_predictions.append([pred_a, pred_b])
+                                with tf.name_scope("step"):
+                                    output_test, prev_state_test = self.cell(s_input, prev_state_test)
+                                    self.outputs_test.append(output_test)
 
 
                     else:
-                        # Everything before the answer phase is the same for both
-                        output, prev_state = self.cell(input_, prev_state)
-                        self.outputs_train.append(output)
-                        self.outputs_test.append(output)
+                        with tf.name_scope("step"):
+                            # Everything before the answer phase is the same for both
+                            output, prev_state = self.cell(input_, prev_state)
+                            self.outputs_train.append(output)
+                            self.outputs_test.append(output)
 
                 else:
-                    output, prev_state = self.cell(input_, prev_state)
-                    self.outputs_train.append(output)
+                    with tf.name_scope("step"):
+                        output, prev_state = self.cell(input_, prev_state)
+                        self.outputs_train.append(output)
 
                 self.save_state(prev_state, seq_length, self.max_length)
                 self.prev_states[seq_length] = prev_state
 
             print(" [*] Constructing mask")
-            # So *very* hacky, but it works
-            true_stacked = tf.stack(self.true_outputs)
-            mask = tf.sign(tf.reduce_max(tf.abs(true_stacked), reduction_indices=1))
-            self.mask_full = tf.transpose(tf.reshape(tf.tile(mask, tf.constant([20])), [20, self.max_length]))
+            with tf.name_scope("answer_filter"):
+                # So *very* hacky, but it works
+                true_stacked = tf.stack(self.true_outputs)
+                mask = tf.sign(tf.reduce_max(tf.abs(true_stacked), reduction_indices=1))
+                self.mask_full = tf.transpose(tf.reshape(tf.tile(mask, tf.constant([20])), [20, self.max_length]))
 
-            # Train
-            self.out_stacked = tf.stack(self.outputs_train)
-            answer_stacked = tf.multiply(self.out_stacked, self.mask_full)
-            self.answer = tf.unstack(answer_stacked)
+                # Train
+                self.out_stacked = tf.stack(self.outputs_train)
+                answer_stacked = tf.multiply(self.out_stacked, self.mask_full)
+                self.answer = tf.unstack(answer_stacked)
 
-            # Test
-            out_test_stacked = tf.stack(self.outputs_test)
-            answer_test_stacked = tf.multiply(out_test_stacked, self.mask_full)
-            self.answer_test = tf.unstack(answer_test_stacked)
+                # Test
+                out_test_stacked = tf.stack(self.outputs_test)
+                answer_test_stacked = tf.multiply(out_test_stacked, self.mask_full)
+                self.answer_test = tf.unstack(answer_test_stacked)
 
             print(" [*] Building a loss model for max seq_length %s" % seq_length)
 
@@ -215,14 +225,15 @@ class NTM(object):
             #                  tf.gradients(loss, self.params), 5)
 
             print(" [*] Generating gradients (slow)")
-            grads = []
-            for grad in tf.gradients(self.loss, self.params):
-                if grad is not None:
-                    grads.append(tf.clip_by_value(grad,
-                                                  self.min_grad,
-                                                  self.max_grad))
-                else:
-                    grads.append(grad)
+            with tf.name_scope("gradients"):
+                grads = []
+                for grad in tf.gradients(self.loss, self.params):
+                    if grad is not None:
+                        grads.append(tf.clip_by_value(grad,
+                                                    self.min_grad,
+                                                    self.max_grad))
+                    else:
+                        grads.append(grad)
 
             print(" [*] Building optimiser")
             self.grads = grads
@@ -230,16 +241,19 @@ class NTM(object):
                                             decay=self.decay,
                                             momentum=self.momentum)
 
+            # Reuse false because I removed the loop from the original code,
+            # therefore there's never anything to reuse
             with tf.variable_scope(tf.get_variable_scope(), reuse=False):
                 self.optim = opt.apply_gradients(
                     zip(grads, self.params),
                     global_step=self.global_step)
 
+
         model_vars = \
             [v for v in tf.global_variables() if v.name.startswith(self.scope)]
         self.saver = tf.train.Saver(model_vars)
         self.merged = tf.summary.scalar('loss', self.loss)
-        
+
         print(" [*] Build a NTM model finished")
 
 

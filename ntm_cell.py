@@ -120,14 +120,14 @@ class NTMCell(object):
                 if layer_idx == 0:
                     def new_gate(gate_name):
                         return linear([input_, o_prev] + read_list_prev,
-                                      output_size = self.controller_dim,
-                                      bias = True,
+                                      output_size=self.controller_dim,
+                                      bias=True,
                                       scope = "%s_gate_%s" % (gate_name, layer_idx))
                 else:
                     def new_gate(gate_name):
                         return linear([output_list[-1], o_prev],
-                                      output_size = self.controller_dim,
-                                      bias = True,
+                                      output_size=self.controller_dim,
+                                      bias=True,
                                       scope="%s_gate_%s" % (gate_name, layer_idx))
 
                 # input, forget, and output gates for LSTM

@@ -103,7 +103,7 @@ def train(ntm, config, sess):
 
 
         #train_writer.add_summary(error, idx)
-    final_error = 0/config.test_set_size
+    final_error = error_sum/config.test_set_size
     print("Final error rate: %.5f" % final_error)
 
     with open(summary_dir + '/error.csv', 'w', newline='') as csvfile:

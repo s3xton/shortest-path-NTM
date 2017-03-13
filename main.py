@@ -20,7 +20,7 @@ flags.DEFINE_integer("write_head_size", 1, "The number of write head [1]")
 flags.DEFINE_integer("read_head_size", 1, "The number of read head [1]")
 flags.DEFINE_integer("test_max_length", 120, "Maximum length of output sequence [120]")
 flags.DEFINE_string("checkpoint_dir", "checkpoint", "Directory name to save the checkpoints [checkpoint]")
-flags.DEFINE_string("summary_dir", "summary", "Directory name to save the summaries [summary]")
+flags.DEFINE_string("summary_dir", "checkpoint", "Directory name to save the checkpoints [checkpoint]")
 flags.DEFINE_boolean("is_train", False, "True for training, False for testing [False]")
 flags.DEFINE_boolean("continue_train", None, "True to continue training from saved checkpoint. False for restarting. None for automatic [None]")
 
@@ -28,6 +28,7 @@ flags.DEFINE_boolean("continue_train", None, "True to continue training from sav
 flags.DEFINE_integer("min_size", 4, "Minimum graph size")
 flags.DEFINE_integer("max_size", 4, "Maximum graph size")
 flags.DEFINE_integer("plan_length", 10, "Length of planning phase")
+flags.DEFINE_integer("test_set_size", 2000, "Number of runs to perform when testing accuracy")
 FLAGS = flags.FLAGS
 
 

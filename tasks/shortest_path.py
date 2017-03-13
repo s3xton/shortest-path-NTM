@@ -4,6 +4,7 @@ import numpy as np
 import tensorflow as tf
 import random
 import graph_util
+import csv
 
 from utils import pprint
 
@@ -13,13 +14,9 @@ def train(ntm, config, sess):
     if not os.path.isdir(config.checkpoint_dir):
         raise Exception(" [!] Directory %s not found" % config.checkpoint_dir)
 
-    if not os.path.isdir(config.summary_dir):
-        raise Exception(" [!] Directory %s not found" % config.summary_dir)
-
     task_dir = "%s_%s_%s" % (config.task, config.min_size, config.max_size)
     summary_dir = os.path.join(config.summary_dir, task_dir)
 
-    train_writer = tf.summary.FileWriter(summary_dir + '/train', sess.graph)
 
     # delimiter flag for start and end
     start_symbol = np.zeros([config.input_dim], dtype=np.float32)
@@ -31,11 +28,16 @@ def train(ntm, config, sess):
     tf.global_variables_initializer().run()
     print(" [*] Initialization finished")
 
-    if config.continue_train is not False:
+    if config.continue_train is True:
         ntm.load(config.checkpoint_dir, config.task, strict=config.continue_train is True)
+        print(" [*] Loading summaries...")
+        train_writer = tf.summary.FileWriterCache.get(summary_dir)
+    else:
+        train_writer = tf.summary.FileWriter(summary_dir, sess.graph)
 
     start_time = time.time()
-    for idx in range(config.epoch):
+    idx = 0
+    while idx < config.epoch:
         graph_size = random.randint(config.min_size, config.max_size)
 
         inp_seq, target_seq, edges = graph_util.gen_single(graph_size,
@@ -58,6 +60,8 @@ def train(ntm, config, sess):
                                            ntm.global_step,
                                            ntm.merged], feed_dict=feed_dict)
 
+        idx = step
+
         if idx % 100 == 0:
             ntm.save(config.checkpoint_dir, config.task, step)
 
@@ -65,11 +69,14 @@ def train(ntm, config, sess):
             print(
                 "[%5d] %2d: %.10f (%.1fs)"
                 % (step, edges, cost, time.time() - start_time))
-                
+
             train_writer.add_summary(summary, step)
 
+
+
     error_sum = 0.0
-    for idx in range(config.epoch):
+    
+    for idx in range(config.test_set_size):
         graph_size = random.randint(config.min_size, config.max_size)
 
         inp_seq, target_seq, edges = graph_util.gen_single(graph_size, config.plan_length, config.max_size)
@@ -84,8 +91,9 @@ def train(ntm, config, sess):
             ntm.end_symbol: end_symbol
         })
 
-        error = sess.run([ntm.get_error], feed_dict=feed_dict)
-        error_sum += error[0]
+        error = sess.run(ntm.error, feed_dict=feed_dict)
+
+        error_sum += error
 
         if idx % print_interval == 0:
             print(
@@ -93,8 +101,18 @@ def train(ntm, config, sess):
                 % (idx, error_sum/(idx +1)))
             print(error)
 
-    print("Final error rate: %.5f" % (error_sum/config.epoch))
 
+        #train_writer.add_summary(error, idx)
+    final_error = 0/config.test_set_size
+    print("Final error rate: %.5f" % final_error)
+
+    with open(summary_dir + '/error.csv', 'w', newline='') as csvfile:
+        writer = csv.writer(csvfile, delimiter=' ',
+                            quotechar='|', quoting=csv.QUOTE_MINIMAL)
+        writer.writerow("%.5f" % final_error)
+
+    train_writer.close
+    train_writer.flush
 
 
 

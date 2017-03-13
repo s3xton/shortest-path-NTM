@@ -238,7 +238,7 @@ class NTM(object):
         model_vars = \
             [v for v in tf.global_variables() if v.name.startswith(self.scope)]
         self.saver = tf.train.Saver(model_vars)
-        self.merged = tf.summary.merge_all()
+        self.merged = tf.summary.scalar('loss', self.loss)
         
         print(" [*] Build a NTM model finished")
 
@@ -253,7 +253,7 @@ class NTM(object):
         return pred_a, pred_b
 
     @lazy_property
-    def get_error(self):
+    def error(self):
         pred_a, pred_b = tf.split(self.answer_test, 2, 1)
         target_a, target_b = tf.split(self.true_outputs, 2, 1)
 
@@ -263,6 +263,9 @@ class NTM(object):
         mistake = tf.logical_or(mistake_a, mistake_b)
         error_rate = tf.reduce_max(tf.cast(mistake, tf.float32))
 
+        #tf.summary.histogram("error", error_rate)
+
+        #return tf.summary.histogram("error", error_rate)
         return error_rate
 
 

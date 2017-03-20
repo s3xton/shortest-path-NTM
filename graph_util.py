@@ -44,8 +44,8 @@ def dijkstra(graph, start):
     adj = graph.adjacency
     Q = []
 
-    dist = [0] * len(nodes)
-    prev = [0] * len(nodes)
+    dist = [0] * 10
+    prev = [0] * 10
 
     for node in nodes:
         dist[node] = math.inf
@@ -200,4 +200,3 @@ def decimal_to_onehot(decimal_digit):
     one_hot = [0] * 10
     one_hot[-decimal_digit-1] = 1
     return one_hot
-

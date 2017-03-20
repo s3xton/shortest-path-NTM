@@ -35,6 +35,7 @@ def pprint(seq):
     seq = np.char.mod('%d', np.around(seq))
     seq[seq == '1'] = '#'
     seq[seq == '0'] = ' '
+    seq[seq == '-1'] = '-'
     print("\n".join(["".join(x) for x in seq.tolist()]))
 
 def gather(m_or_v, idx):

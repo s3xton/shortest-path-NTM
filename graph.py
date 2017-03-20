@@ -11,9 +11,9 @@ class Graph:
      is easier to manipulate and debug the graphs using integers.
      """
     def __init__(self, graph_size):
-        self.nodes = list(range(graph_size))
+        self.nodes = random.sample(list(range(10)), graph_size)
         self.size = graph_size
-
+        
         max_edges = graph_size * (graph_size - 1) / 2
         min_edges = graph_size - 1
         self.edge_number = random.randint(min_edges, max_edges)
@@ -49,8 +49,8 @@ class Graph:
     def __set_adjacency(self):
         # Create an adjacency matrix to be used for faster lookup for shortest paths
         self.adjacency = []
-        for i in range(0, self.size):
-            self.adjacency.append([0] * self.size)
+        for i in range(0, 10):
+            self.adjacency.append([0] * 10)
 
         for edge in self.edge_list:
             self.adjacency[edge[0]][edge[1]] = 1
@@ -69,4 +69,3 @@ class Graph:
         self.size = len(nodes)
         self.edge_number = len(edge_list)
         self.__set_adjacency()
-

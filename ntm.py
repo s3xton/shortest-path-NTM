@@ -98,6 +98,8 @@ class NTM(object):
         self.prev_states = {}
         self.input_states = defaultdict(list)
         self.output_states = defaultdict(list)
+        self.test_states = []
+        self.train_states = []
 
         self.start_symbol = tf.placeholder(tf.float32, [self.cell.input_dim],
                                            name='start_symbol')
@@ -123,9 +125,10 @@ class NTM(object):
             # present start symbol
             with tf.name_scope("start_step"):
                 _, prev_state = self.cell(self.start_symbol, state=None)
-            #self.save_state(prev_state, 0, self.max_length)
 
-            #zeros = np.zeros(self.cell.input_dim, dtype=np.float32)
+            self.test_states.append(prev_state)
+            self.train_states.append(prev_state)
+
             start_answer = self.max_length - self.max_size + 1
             prefix = tf.constant([1, 1], np.float32)
 
@@ -152,25 +155,34 @@ class NTM(object):
                             with tf.name_scope("train"):
                                 # For training, use target
                                 s_input = tf.concat([prefix, self.true_outputs[-2]], 0)
+
                                 with tf.name_scope("step"):
-                                    output_train, prev_state_train = self.cell(s_input, prev_state_train)
-                                self.outputs_train.append(output_train)
+                                    output_train, prev_state_train = self.cell(s_input,
+                                                                               prev_state_train)
+                                    self.outputs_train.append(output_train)
+                                    self.train_states.append(prev_state_train)
 
                             with tf.name_scope("test"):
                                 with tf.name_scope("converter"):
                                     # For testing, use previous
                                     # TODO CHECK THIS ACTUALLY WORKS AS INTENDED
                                     out_a, out_b = tf.split(self.outputs_test[-1], 2)
-                                    pred_a = tf.arg_max(tf.nn.softmax(out_a, name="test_soft_a"), 0, "test_argm_a")
-                                    pred_b = tf.arg_max(tf.nn.softmax(out_b, name="test_soft_b"), 0, "test_argm_b")
+                                    pred_a = tf.arg_max(tf.nn.softmax(out_a, name="test_soft_a"),
+                                                        0,
+                                                        "test_argm_a")
+                                    pred_b = tf.arg_max(tf.nn.softmax(out_b, name="test_soft_b"),
+                                                        0,
+                                                        "test_argm_b")
                                     in_a = tf.one_hot(9 - pred_a, 10, name="one_hot_a")
                                     in_b = tf.one_hot(9 - pred_b, 10, name="one_hot_b")
                                     s_input = tf.concat([prefix, in_a, in_b], 0, name="input_next")
 
                                 #self.test_predictions.append([pred_a, pred_b])
                                 with tf.name_scope("step"):
-                                    output_test, prev_state_test = self.cell(s_input, prev_state_test)
+                                    output_test, prev_state_test = self.cell(s_input,
+                                                                             prev_state_test)
                                     self.outputs_test.append(output_test)
+                                    self.test_states.append(prev_state_test)
 
 
                     else:
@@ -179,28 +191,31 @@ class NTM(object):
                             output, prev_state = self.cell(input_, prev_state)
                             self.outputs_train.append(output)
                             self.outputs_test.append(output)
+                            self.test_states.append(prev_state)
+                            self.train_states.append(prev_state)
 
                 else:
                     with tf.name_scope("step"):
+                        # Without any structured learning
                         output, prev_state = self.cell(input_, prev_state)
                         self.outputs_train.append(output)
+                        self.train_states.append(prev_state)
 
-                self.save_state(prev_state, seq_length, self.max_length)
-                self.prev_states[seq_length] = prev_state
 
             print(" [*] Constructing mask")
             with tf.name_scope("answer_filter"):
                 # So *very* hacky, but it works
                 true_stacked = tf.stack(self.true_outputs)
                 mask = tf.sign(tf.reduce_max(tf.abs(true_stacked), reduction_indices=1))
-                self.mask_full = tf.transpose(tf.reshape(tf.tile(mask, tf.constant([20])), [20, self.max_length]))
+                self.mask_full = tf.transpose(tf.reshape(tf.tile(mask, tf.constant([20])),
+                                                         [20, self.max_length]))
 
-                # Train
+                # Train answer
                 self.out_stacked = tf.stack(self.outputs_train)
                 answer_stacked = tf.multiply(self.out_stacked, self.mask_full)
                 self.answer = tf.unstack(answer_stacked)
 
-                # Test
+                # Test answer
                 out_test_stacked = tf.stack(self.outputs_test)
                 answer_test_stacked = tf.multiply(out_test_stacked, self.mask_full)
                 self.answer_test = tf.unstack(answer_test_stacked)
@@ -290,45 +305,6 @@ class NTM(object):
 
         """
         return self.loss
-
-    def get_output_states(self, seq_length):
-        zeros = np.zeros(self.cell.input_dim, dtype=np.float32)
-
-        if not seq_length in self.output_states:
-            with tf.variable_scope(self.scope):
-                tf.get_variable_scope().reuse_variables()
-
-                outputs, output_logits = [], []
-                state = self.prev_states[seq_length]
-
-                for _ in range(seq_length):
-                    output, output_logit, state = self.cell(zeros, state)
-                    self.save_state(state, seq_length, is_output=True)
-                    outputs.append(output)
-                    output_logits.append(output_logit)
-                self.outputs[seq_length] = outputs
-                self.output_logits[seq_length] = output_logits
-        return self.output_states[seq_length]
-
-    #@property
-    #def loss(self):
-    #    return self.losses[self.cell.depth]
-
-    #@property
-    #def optim(self):
-    #    return self.optims[self.cell.depth]
-
-    def save_state(self, state, from_, to=None, is_output=False):
-        if is_output:
-            state_to_add = self.output_states
-        else:
-            state_to_add = self.input_states
-
-        if to:
-            for idx in range(from_, to + 1):
-                state_to_add[idx].append(state)
-        else:
-            state_to_add[from_].append(state)
 
     def save(self, checkpoint_dir, task_name, step):
         task_dir = os.path.join(checkpoint_dir, "%s_%s_%s" % (task_name, self.min_size, self.max_size))

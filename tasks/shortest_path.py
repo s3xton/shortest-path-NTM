@@ -5,6 +5,7 @@ import tensorflow as tf
 import random
 import graph_util
 import csv
+import utils
 
 from utils import pprint
 
@@ -55,10 +56,11 @@ def train(ntm, config, sess):
             ntm.end_symbol: end_symbol
         })
 
-        _, cost, step, summary = sess.run([ntm.optim,
+        _, cost, step, summary, states = sess.run([ntm.optim,
                                            ntm.get_loss(),
                                            ntm.global_step,
-                                           ntm.merged], feed_dict=feed_dict)
+                                           ntm.merged,
+                                           ntm.train_states], feed_dict=feed_dict)
 
         idx = step
 
@@ -69,13 +71,13 @@ def train(ntm, config, sess):
             print(
                 "[%5d] %2d: %.10f (%.1fs)"
                 % (step, edges, cost, time.time() - start_time))
-
+            #utils.pprint(states[-1]['M'])
             train_writer.add_summary(summary, step)
 
 
 
     error_sum = 0.0
-    
+
     for idx in range(config.test_set_size):
         graph_size = random.randint(config.min_size, config.max_size)
 

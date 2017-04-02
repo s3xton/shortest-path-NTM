@@ -9,7 +9,7 @@ import utils
 
 from utils import pprint
 
-print_interval = 5
+print_interval = 1
 
 def train(ntm, config, sess):
     # Check all relevant directories are present
@@ -39,11 +39,14 @@ def train(ntm, config, sess):
     else:
         train_writer = tf.summary.FileWriter(summary_dir, sess.graph)
 
+    print(" [*] Loading dataset...")
     # Load the dataset from the file and get training sets
     dset = dataset.Dataset(config.dataset_filename)
     input_set, target_set = dset.get_training_data()
 
+
     # Start training
+    print(" [*] Starting training")
     start_time = time.time()
     idx = 0
     while idx < config.epoch:
@@ -62,11 +65,10 @@ def train(ntm, config, sess):
         })
 
         # Run the NTM
-        _, cost, step, summary, states = sess.run([ntm.optim,
-                                                   ntm.get_loss(),
-                                                   ntm.global_step,
-                                                   ntm.merged,
-                                                   ntm.train_states], feed_dict=feed_dict)
+        _, cost, step, summary = sess.run([ntm.optim,
+                                           ntm.get_loss(),
+                                           ntm.global_step,
+                                           ntm.merged], feed_dict=feed_dict)
 
         # Save stuff, print stuff
         if idx % 1000 == 0:
@@ -74,9 +76,11 @@ def train(ntm, config, sess):
         if idx % print_interval == 0:
             print(
                 "[%5d] %.10f (%.1fs)"
-                % (step, cost, time.time() - start_time))
+                % (idx, cost, time.time() - start_time))
             #utils.pprint(states[-1]['M'])
             train_writer.add_summary(summary, step)
+
+        idx += 1
 
     # Cleanup
     train_writer.close
@@ -126,8 +130,8 @@ def run(ntm, config, sess, graph_size):
                 % (idx, error_sum/(idx +1)))
             print(error)
 
+        idx += 1
 
-        #train_writer.add_summary(error, idx)
     final_error = error_sum/config.test_set_size
     print("Final error rate: %.5f" % final_error)
 

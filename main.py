@@ -25,10 +25,13 @@ flags.DEFINE_boolean("is_train", False, "True for training, False for testing [F
 flags.DEFINE_boolean("continue_train", None, "True to continue training from saved checkpoint. False for restarting. None for automatic [None]")
 
 # My config vars
-flags.DEFINE_integer("min_size", 4, "Minimum graph size")
-flags.DEFINE_integer("max_size", 4, "Maximum graph size")
+flags.DEFINE_integer("min_size", 10, "Minimum graph size")
+flags.DEFINE_integer("max_size", 10, "Maximum graph size")
 flags.DEFINE_integer("plan_length", 10, "Length of planning phase")
-flags.DEFINE_integer("test_set_size", 2000, "Number of runs to perform when testing accuracy")
+flags.DEFINE_integer("train_set_size", 1000, "Number of runs to perform when training")
+flags.DEFINE_integer("val_set_size", 1000, "Number of runs to perform when training")
+flags.DEFINE_integer("test_set_size", 100, "Number of runs to perform when testing accuracy")
+flags.DEFINE_string("dataset_filename", "4_1000", "Root name of the dataset files")
 FLAGS = flags.FLAGS
 
 
@@ -71,14 +74,7 @@ def main(_):
 
         #ntm.load(FLAGS.checkpoint_dir, FLAGS.task)
 
-        if FLAGS.task == 'copy':
-            task.run(ntm, int(FLAGS.test_max_length * 1 / 3), sess)
-            print
-            task.run(ntm, int(FLAGS.test_max_length * 2 / 3), sess)
-            print
-            task.run(ntm, int(FLAGS.test_max_length * 3 / 3), sess)
-        #else:
-         #   task.run(ntm, int(FLAGS.test_max_length), sess)
+        task.run(ntm, 7)
 
 
 if __name__ == '__main__':

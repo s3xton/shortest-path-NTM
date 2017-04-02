@@ -10,15 +10,18 @@ class Graph:
      acceptable by the network (bit sequences) to begin with. This is because it
      is easier to manipulate and debug the graphs using integers.
      """
-    def __init__(self, graph_size):
+    def __init__(self, graph_size, edge_number=0):
         self.nodes = random.sample(list(range(10)), graph_size)
         self.size = graph_size
-        
+        self.edge_list = []
         max_edges = graph_size * (graph_size - 1) / 2
         min_edges = graph_size - 1
-        self.edge_number = random.randint(min_edges, max_edges)
 
-        self.edge_list = []
+        if edge_number == 0:
+            self.edge_number = random.randint(min_edges, max_edges)
+        else:
+            self.edge_number = edge_number
+
         possible_edges = list(itertools.combinations(self.nodes, 2))
 
         # All graphs must be connected, therefore there is at least one path connecting
@@ -34,7 +37,7 @@ class Graph:
             if edge in possible_edges:
                 possible_edges.remove(edge)
             else:
-                possible_edges.remove(edge[::-1])
+                possible_edges.remove(edge[::-1]) # lol python syntax - ::-1 means reverse
 
         # For many graphs, there will be more edges, add these now. Again maintaining
         # randomness in construction.
@@ -45,16 +48,21 @@ class Graph:
         # Shuffle the graph so that there are definitely no patterns.
         random.shuffle(self.edge_list)
         self.__set_adjacency()
+        # Turn everything into a tuple at the end so that it can be hashed
+        self.nodes = tuple(self.nodes)
+        self.edge_list = tuple(map(tuple, self.edge_list))
 
     def __set_adjacency(self):
         # Create an adjacency matrix to be used for faster lookup for shortest paths
-        self.adjacency = []
+        adjacency = []
         for i in range(0, 10):
-            self.adjacency.append([0] * 10)
+            adjacency.append([0] * 10)
 
         for edge in self.edge_list:
-            self.adjacency[edge[0]][edge[1]] = 1
-            self.adjacency[edge[1]][edge[0]] = 1
+            adjacency[edge[0]][edge[1]] = 1
+            adjacency[edge[1]][edge[0]] = 1
+
+        self.adjacency = tuple(map(tuple, adjacency))
 
     def set_graph(self, nodes, edge_list):
         """

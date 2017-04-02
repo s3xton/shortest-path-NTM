@@ -74,7 +74,7 @@ def main(_):
 
         #ntm.load(FLAGS.checkpoint_dir, FLAGS.task)
 
-        task.run(ntm, 7)
+        task.run(ntm, FLAGS, sess, 4)
 
 
 if __name__ == '__main__':

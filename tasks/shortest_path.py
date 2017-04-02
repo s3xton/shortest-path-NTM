@@ -49,7 +49,7 @@ def train(ntm, config, sess):
     print(" [*] Starting training")
     start_time = time.time()
     idx = 0
-    while idx < config.epoch:
+    for idx, _ in enumerate(input_set):
         # Get inputs
         inp_seq = input_set[idx]
         target_seq = target_set[idx]
@@ -80,8 +80,6 @@ def train(ntm, config, sess):
             #utils.pprint(states[-1]['M'])
             train_writer.add_summary(summary, step)
 
-        idx += 1
-
     # Cleanup
     train_writer.close
     train_writer.flush
@@ -105,7 +103,7 @@ def run(ntm, config, sess, graph_size):
     input_set, target_set = dset.get_validation_data()
 
     error_sum = 0.0
-    for idx in range(config.val_set_size):
+    for idx, _ in enumerate(input_set):
         # Get inputs
         inp_seq = input_set[idx]
         target_seq = target_set[idx]
@@ -129,8 +127,6 @@ def run(ntm, config, sess, graph_size):
                 "[%5d] %.5f"
                 % (idx, error_sum/(idx +1)))
             print(error)
-
-        idx += 1
 
     final_error = error_sum/config.test_set_size
     print("Final error rate: %.5f" % final_error)

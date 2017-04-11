@@ -1,5 +1,6 @@
 import random
 import os
+import gc
 import pickle
 import math
 import graph as gr
@@ -8,92 +9,78 @@ def build_dataset_file(train_size,
                        val_size,
                        test_size,
                        graph_size,
-                       edge_number=0,
-                       curriculum=True,
-                       path_length=0):
-
-    total_size = train_size + val_size + test_size
-
-    total_set_bins = []
-    # Create a bin for each path length
-    for i in range(0, graph_size):
-        total_set_bins.append([])
-
-    max_per_bin = total_size/(graph_size-1)
-    collision_count = 0
-    size_excess = 0
-    element_dict = {}
-    for j in range(total_size):
-        unique = False
-
-        while not unique:
-            graph = gr.Graph(graph_size, edge_number)
-            path = []
-            plength = 0
-            if not curriculum:
-                if path_length == 0:
-                    print("[!] Warning: if not using curriculum learning make path length non-zero")
-                while plength != path_length:
-                    start, end = random.sample(graph.nodes, 2)
-                    path = shortest_path(graph, start, end)
-                    plength = len(path)
-            else:
-                start, end = random.sample(graph.nodes, 2)
-                path = shortest_path(graph, start, end)
-                plength = len(path)
-
-            element = (graph,
-                       start,
-                       end,
-                       path,
-                       plength)
-
-            if not collision(element_dict, element):
-                if len(total_set_bins[plength]) < max_per_bin:
-                    total_set_bins[plength].append(element)
-                    unique = True
-                else:
-                    size_excess += 1
-            else:
-                collision_count += 1
-
-            print("[*] Progress: %d/%d, collisions: %d, size excess:%d"
-                  %(j+1, total_size, collision_count, size_excess),
-                  end="\r")
-
-
-    print("\n[*] Dataset generation complete")
-    for i in range(0, graph_size):
-        print("Path length %d: %d"%(i, len(total_set_bins[i])))
+                       edge_number=0):
 
     directory = "dataset_files"
     if not os.path.exists(directory):
         os.makedirs(directory)
+        os.makedirs(directory+"/train")
+        os.makedirs(directory+"/val")
+        os.makedirs(directory+"/test")
 
-    train_set_bins = []
-    val_set_bins = []
-    test_set_bins = []
+    train_bins = {}
+    val_bins = {}
+    test_bins = {}
+    dset = {"train":train_bins, "val":val_bins, "test":test_bins}
 
-    train_per_bin = int(train_size/(graph_size-1))
-    val_per_bin = int(val_size/(graph_size-1))
+    for i in range(1, graph_size):
+        train_bins[i] = []
+        val_bins[i] = []
+        test_bins[i] = []
 
-    for i in range(graph_size):
-        train_set_bins.append(total_set_bins[i][:train_per_bin])
-        val_set_bins.append(total_set_bins[i][train_per_bin:train_per_bin+val_per_bin])
-        test_set_bins.append(total_set_bins[i][train_per_bin+val_per_bin:])
+    num_bins = graph_size - 1
+    train_bin_size = train_size/num_bins
+    val_bin_size = val_size/num_bins
+    test_bin_size = test_size/num_bins
+    bin_sizes = {"train":train_bin_size, "val":val_bin_size, "test":test_bin_size}
 
-    print("[*] Pickling dataset")
-    with open('dataset_files/%d_%d_train.pkl'%(graph_size, train_size), 'wb') as output:
-        pickle.dump(train_set_bins, output, pickle.HIGHEST_PROTOCOL)
+    total_size = train_size + val_size + test_size
 
-    with open('dataset_files/%d_%d_val.pkl'%(graph_size, train_size), 'wb') as output:
-        pickle.dump(val_set_bins, output, pickle.HIGHEST_PROTOCOL)
+    collision_count = 0
+    size_excess = 0
+    element_dict = {}
+    for j in range(total_size):
+        inserted = False
+        while not inserted:
+            unique = False
+            # Get a unique element
+            while not unique:
+                graph = gr.Graph(graph_size, edge_number)
+                path = []
+                start, end = random.sample(graph.nodes, 2)
+                path = shortest_path(graph, start, end)
+                plength = len(path)
+                element = (graph,
+                           start,
+                           end,
+                           path,
+                           plength)
 
-    with open('dataset_files/%d_%d_test.pkl'%(graph_size, train_size), 'wb') as output:
-        pickle.dump(test_set_bins, output, pickle.HIGHEST_PROTOCOL)
+                if not collision(element_dict, element):
+                    unique = True
+                else:
+                    collision_count += 1
 
-    # Cleanup
-    del total_set_bins, train_set_bins, val_set_bins, test_set_bins
+            # Distribute it into the various num_bins
+            for key in dset.keys():
+                if not inserted:
+                    if plength in dset[key]:
+                        dset[key][plength].append(element)
+                        inserted = True
+                        # If the bin is full, pickle it and delete it
+                        if len(dset[key][plength]) == bin_sizes[key]:
+                            print("\n[*] Pickling {} bin_{}".format(key, plength))
+                            with open('dataset_files/{}/bin_{}.pkl'.format(key, plength), 'wb') as output:
+                                pickle.dump(dset[key][plength], output, pickle.HIGHEST_PROTOCOL)
+                            del dset[key][plength]
+                            gc.collect()
+            if not inserted:
+                size_excess += 1
+
+        print("[*] Progress: %d/%d, collisions: %d, size excess:%d"
+              %(j+1, total_size, collision_count, size_excess),
+              end="\r")
+
 
 
 
@@ -182,11 +169,4 @@ def collision(elem_dict, element):
     else:
         elem_dict[elem_tuple] = 1
         return False
-
-#def main():
-    #build_dataset_file(1000000, 200000, 200000, 7)
-    #build_dataset_file(2000, 200, 200, 4)
-
-#if __name__ == "__main__":
- #   main()
 

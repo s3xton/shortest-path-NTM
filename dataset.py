@@ -6,15 +6,19 @@ import graph as gr
 
 class Dataset:
     #SET -> BINS -> [GRAPH | START | END | PATH | LENGTH]
-    def __init__(self, filename):
-        with open("dataset_files/"+filename+"_train.pkl", 'rb') as pickled_dataset:
-            self.train_set_bins = pickle.load(pickled_dataset)
-        with open("dataset_files/"+filename+"_val.pkl", 'rb') as pickled_dataset:
-            self.val_set_bins = pickle.load(pickled_dataset)
-        with open("dataset_files/"+filename+"_train.pkl", 'rb') as pickled_dataset:
-            self.test_set_bins = pickle.load(pickled_dataset)
+    def __init__(self, graph_size):
+        self.train_set_bins = []
+        self.val_set_bins = []
+        self.test_set_bins = []
 
-        self.graph_size = len(self.train_set_bins[1][0][0].nodes)
+        for i in range(1, graph_size):
+            with open("dataset_files/train/bin_{}.pkl".format(i), 'rb') as pickled_dataset:
+                self.train_set_bins.append(pickle.load(pickled_dataset))
+            with open("dataset_files/val/bin_{}.pkl".format(i), 'rb') as pickled_dataset:
+                self.val_set_bins.append(pickle.load(pickled_dataset))
+            with open("dataset_files/test/bin_{}.pkl".format(i), 'rb') as pickled_dataset:
+                self.test_set_bins.append(pickle.load(pickled_dataset))
+
 
     def get_validation_data(self, val_size=0):
         return self.get_encoded_data(self.val_set_bins, val_size)
@@ -29,7 +33,7 @@ class Dataset:
 
         if draw_size < total_size:
             if draw_size != 0:
-                max_per_bin = draw_size/(len(draw_set)-1)
+                max_per_bin = int(draw_size/(len(draw_set)-1))
             input_set = []
             target_set = []
             for i in range(1, len(draw_set)):

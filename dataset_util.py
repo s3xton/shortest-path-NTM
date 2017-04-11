@@ -66,6 +66,9 @@ def build_dataset_file(train_size,
                 if not inserted:
                     if plength in dset[key]:
                         dset[key][plength].append(element)
+                        adj = element[0].adjacency
+                        elem_tuple = (adj, element[1], element[2], element[3], element[4])
+                        element_dict[elem_tuple] = 1
                         inserted = True
                         # If the bin is full, pickle it and delete it
                         if len(dset[key][plength]) == bin_sizes[key]:
@@ -167,6 +170,5 @@ def collision(elem_dict, element):
     if elem_tuple in elem_dict:
         return True
     else:
-        elem_dict[elem_tuple] = 1
         return False
 

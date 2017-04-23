@@ -6,17 +6,17 @@ import graph as gr
 
 class Dataset:
     #SET -> BINS -> [GRAPH | START | END | PATH | LENGTH]
-    def __init__(self, graph_size):
+    def __init__(self, graph_size, dataset_dir):
         self.train_set_bins = []
         self.val_set_bins = []
         self.test_set_bins = []
 
         for i in range(1, graph_size):
-            with open("dataset_files/train/bin_{}.pkl".format(i), 'rb') as pickled_dataset:
+            with open("{}/train/bin_{}.pkl".format(dataset_dir, i), 'rb') as pickled_dataset:
                 self.train_set_bins.append(pickle.load(pickled_dataset))
-            with open("dataset_files/val/bin_{}.pkl".format(i), 'rb') as pickled_dataset:
+            with open("{}/val/bin_{}.pkl".format(dataset_dir, i), 'rb') as pickled_dataset:
                 self.val_set_bins.append(pickle.load(pickled_dataset))
-            with open("dataset_files/test/bin_{}.pkl".format(i), 'rb') as pickled_dataset:
+            with open("{}/test/bin_{}.pkl".format(dataset_dir, i), 'rb') as pickled_dataset:
                 self.test_set_bins.append(pickle.load(pickled_dataset))
 
 

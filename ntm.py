@@ -46,7 +46,6 @@ def sp_loss_function(labels, inputs):
 class NTM(object):
     def __init__(self, cell, sess,
                  min_length, max_length, min_size, max_size,
-                 test_max_length=120,
                  min_grad=-10, max_grad=+10,
                  lr=1e-4, momentum=0.9, decay=0.95,
                  scope="NTM", forward_only=False):
@@ -57,7 +56,6 @@ class NTM(object):
             sess: A TensorFlow session.
             min_length: Minimum length of input sequence.
             max_length: Maximum length of input sequence for training.
-            test_max_length: Maximum length of input sequence for testing.
             min_grad: (optional) Minimum gradient for gradient clipping [-10].
             max_grad: (optional) Maximum gradient for gradient clipping [+10].
             lr: (optional) Learning rate [1e-4].
@@ -82,9 +80,6 @@ class NTM(object):
         self._max_length = max_length
         self.min_size = min_size
         self.max_size = max_size
-
-        if forward_only:
-            self.max_length = test_max_length
 
         self.inputs = []
         self.outputs_train = []
@@ -307,22 +302,15 @@ class NTM(object):
         return self.loss
 
     def save(self, checkpoint_dir, task_name, step):
-        task_dir = os.path.join(checkpoint_dir, "%s_%s_%s" % (task_name, self.min_size, self.max_size))
         file_name = "%s_%s.model" % (self.scope, task_name)
-
-        if not os.path.exists(task_dir):
-            os.makedirs(task_dir)
 
         self.saver.save(
             self.sess,
-            os.path.join(task_dir, file_name),
+            os.path.join(checkpoint_dir, file_name),
             global_step=step.astype(int))
 
     def load(self, checkpoint_dir, task_name, strict=True):
         print(" [*] Reading checkpoints...")
-
-        task_dir = "%s_%s_%s" % (task_name, self.min_size, self.max_size)
-        checkpoint_dir = os.path.join(checkpoint_dir, task_dir)
 
         ckpt = tf.train.get_checkpoint_state(checkpoint_dir)
         if ckpt and ckpt.model_checkpoint_path:

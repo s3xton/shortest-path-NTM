@@ -15,7 +15,7 @@ class NTMCell(object):
     def __init__(self, input_dim, output_dim,
                  mem_size=128, mem_dim=20, controller_dim=100,
                  controller_layer_size=1, shift_range=1,
-                 write_head_size=1, read_head_size=1):
+                 write_head_size=1, read_head_size=1, is_LSTM_mode=False):
         """Initialize the parameters for an NTM cell.
         Args:
             input_dim: int, The number of units in the LSTM cell
@@ -35,6 +35,7 @@ class NTMCell(object):
         self.shift_range = shift_range
         self.write_head_size = write_head_size
         self.read_head_size = read_head_size
+        self.is_LSTM_mode = is_LSTM_mode
 
         self.depth = 0
         self.states = []
@@ -119,10 +120,17 @@ class NTMCell(object):
 
                 if layer_idx == 0:
                     def new_gate(gate_name):
-                        return linear([input_, o_prev] + read_list_prev,
+                        if not self.is_LSTM_mode:
+                            return linear([input_, o_prev] + read_list_prev,
+                                          output_size=self.controller_dim,
+                                          bias=True,
+                                          scope = "%s_gate_%s" % (gate_name, layer_idx))
+                        else:
+                            return linear([input_, o_prev],
                                       output_size=self.controller_dim,
                                       bias=True,
                                       scope = "%s_gate_%s" % (gate_name, layer_idx))
+
                 else:
                     def new_gate(gate_name):
                         return linear([output_list[-1], o_prev],

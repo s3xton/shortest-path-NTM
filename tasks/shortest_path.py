@@ -14,7 +14,8 @@ print_interval = 1
 def train(ntm, config, sess):
     # Check all relevant directories are present
     if not os.path.isdir(config.checkpoint_dir):
-        raise Exception(" [!] Directory %s not found" % config.checkpoint_dir)
+        print("[!] Directory %s not found. Creating." % config.checkpoint_dir)
+        os.makedirs(config.checkpoint_dir)
 
     if not os.path.isdir("dataset_files"):
         raise Exception(" [!] Directory dataset_files not found")
@@ -41,8 +42,8 @@ def train(ntm, config, sess):
 
     print(" [*] Loading dataset...")
     # Load the dataset from the file and get training sets
-    dset = dataset.Dataset(config.dataset_filename)
-    input_set, target_set = dset.get_training_data()
+    dset = dataset.Dataset(config.graph_size, config.dataset_dir)
+    input_set, target_set = dset.get_training_data(config.train_size)
 
 
     # Start training
@@ -85,7 +86,7 @@ def train(ntm, config, sess):
     train_writer.flush
 
 #TODO fix up this run section
-def run(ntm, config, sess, graph_size):
+def run(ntm, config, sess):
 
     if not os.path.isdir("dataset_files"):
         raise Exception(" [!] Directory dataset_files not found")
@@ -99,8 +100,8 @@ def run(ntm, config, sess, graph_size):
     end_symbol[0] = 0
 
     # Load the dataset from the file and get training sets
-    dset = dataset.Dataset(config.dataset_filename)
-    input_set, target_set = dset.get_validation_data()
+    dset = dataset.Dataset(config.graph_size, config.dataset_dir)
+    input_set, target_set = dset.get_validation_data(config.val_size)
 
     error_sum = 0.0
     for idx, _ in enumerate(input_set):

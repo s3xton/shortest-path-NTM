@@ -43,7 +43,7 @@ def train(ntm, config, sess):
     print(" [*] Loading dataset...")
     # Load the dataset from the file and get training sets
     dset = dataset.Dataset(config.graph_size, config.dataset_dir)
-    input_set, target_set = dset.get_training_data(config.train_size)
+    input_set, target_set = dset.get_training_data(config.train_set_size)
 
 
     # Start training
@@ -101,7 +101,7 @@ def run(ntm, config, sess):
 
     # Load the dataset from the file and get training sets
     dset = dataset.Dataset(config.graph_size, config.dataset_dir)
-    input_set, target_set = dset.get_validation_data(config.val_size)
+    input_set, target_set = dset.get_validation_data(config.val_set_size)
 
     error_sum = 0.0
     for idx, _ in enumerate(input_set):

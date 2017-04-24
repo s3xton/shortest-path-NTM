@@ -85,7 +85,7 @@ def train(ntm, config, sess):
 
 #TODO fix up this run section
 def run(ntm, config, sess):
-    numpy.set_printoptions(threshold=numpy.nan)
+    np.set_printoptions(threshold=np.nan)
     if not os.path.isdir("dataset_files"):
         raise Exception(" [!] Directory dataset_files not found")
 

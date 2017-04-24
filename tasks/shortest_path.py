@@ -69,8 +69,9 @@ def train(ntm, config, sess):
 
         # Save stuff, print stuff
         if idx % 1000 == 0:
-            ntm.save(config.checkpoint_dir, config.task, step)
             print(" [*] Saving checkpoint")
+            ntm.save(config.checkpoint_dir, config.task, step)
+
         if idx % print_interval == 0:
             print(
                 "[%d:%d] %.10f (%.1fs)"
@@ -84,7 +85,7 @@ def train(ntm, config, sess):
 
 #TODO fix up this run section
 def run(ntm, config, sess):
-
+    numpy.set_printoptions(threshold=numpy.nan)
     if not os.path.isdir("dataset_files"):
         raise Exception(" [!] Directory dataset_files not found")
 
@@ -113,7 +114,7 @@ def run(ntm, config, sess):
             ntm.end_symbol: end_symbol
         })
 
-        error = sess.run(ntm.error, feed_dict=feed_dict)
+        error, mask = sess.run([ntm.error, ntm.mask_full], feed_dict=feed_dict)
 
         error_sum += error
 
@@ -122,6 +123,7 @@ def run(ntm, config, sess):
                 "[%d:%d] %.5f"
                 % (idx, lengths[idx], error_sum/(idx +1)))
             print(error)
+            print(np.array(mask))
 
     final_error = error_sum/config.test_set_size
     print("Final error rate: %.5f" % final_error)

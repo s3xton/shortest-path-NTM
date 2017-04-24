@@ -114,7 +114,7 @@ def run(ntm, config, sess):
             ntm.end_symbol: end_symbol
         })
 
-        error, mask = sess.run([ntm.error, ntm.mask_full], feed_dict=feed_dict)
+        error = sess.run(ntm.error, feed_dict=feed_dict)
 
         error_sum += error
 

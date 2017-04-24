@@ -78,10 +78,13 @@ class NTMCell(object):
         last_output = output_list[-1]
 
         # build a memory
-        M, read_w_list, write_w_list, read_list = self.build_memory(M_prev,
-                                                                    read_w_list_prev,
-                                                                    write_w_list_prev,
-                                                                    last_output)
+        if not self.is_LSTM_mode:
+            M, read_w_list, write_w_list, read_list = self.build_memory(M_prev,
+                                                                        read_w_list_prev,
+                                                                        write_w_list_prev,
+                                                                        last_output)
+        else:
+            M, read_w_list, write_w_list, read_list = 0, 0, 0, 0
 
         # get a new output
         new_output = self.new_output(last_output)

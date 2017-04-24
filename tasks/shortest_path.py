@@ -114,7 +114,7 @@ def run(ntm, config, sess):
             ntm.end_symbol: end_symbol
         })
 
-        error, step, answer = sess.run([ntm.error, ntm.global_step, ntm.answer_test], feed_dict=feed_dict)
+        error, step = sess.run([ntm.error, ntm.global_step], feed_dict=feed_dict)
 
         error_sum += error
 
@@ -123,7 +123,6 @@ def run(ntm, config, sess):
                 "[%d:%d] %.5f %d"
                 % (idx, lengths[idx], error_sum/(idx +1), step))
             print(error)
-            print(np.array(answer))
 
     final_error = error_sum/config.test_set_size
     print("Final error rate: %.5f" % final_error)

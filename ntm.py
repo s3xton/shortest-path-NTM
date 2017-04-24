@@ -285,8 +285,8 @@ class NTM(object):
         mistake_b = tf.not_equal(tf.argmax(target_b, 1), tf.argmax(pred_b, 1))
 
         mistake = tf.logical_or(mistake_a, mistake_b)
-        error_rate = tf.reduce_max(tf.cast(mistake, tf.float32))
-
+        error_rate = tf.reduce_sum(tf.cast(mistake, tf.float32))
+        error_rate /= tf.reduce_sum(self.mask_full)
         #tf.summary.histogram("error", error_rate)
 
         #return tf.summary.histogram("error", error_rate)

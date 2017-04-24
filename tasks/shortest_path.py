@@ -14,7 +14,7 @@ print_interval = 1
 def train(ntm, config, sess):
     # Check all relevant directories are present
     if not os.path.isdir(config.checkpoint_dir):
-        print("[!] Directory %s not found. Creating." % config.checkpoint_dir)
+        print(" [!] Directory %s not found. Creating." % config.checkpoint_dir)
         os.makedirs(config.checkpoint_dir)
 
     if not os.path.isdir("dataset_files"):
@@ -43,13 +43,12 @@ def train(ntm, config, sess):
     print(" [*] Loading dataset...")
     # Load the dataset from the file and get training sets
     dset = dataset.Dataset(config.graph_size, config.dataset_dir)
-    input_set, target_set = dset.get_training_data(config.train_set_size)
+    input_set, target_set, lengths = dset.get_training_data(config.train_set_size)
 
 
     # Start training
     print(" [*] Starting training")
     start_time = time.time()
-    idx = 0
     for idx, _ in enumerate(input_set):
         # Get inputs
         inp_seq = input_set[idx]
@@ -74,10 +73,11 @@ def train(ntm, config, sess):
         # Save stuff, print stuff
         if idx % 1000 == 0:
             ntm.save(config.checkpoint_dir, config.task, step)
+            print(" [*] Saving checkpoint")
         if idx % print_interval == 0:
             print(
-                "[%5d] %.10f (%.1fs)"
-                % (idx, cost, time.time() - start_time))
+                "[%d:%d] %.10f (%.1fs)"
+                % (idx, lengths[idx], cost, time.time() - start_time))
             #utils.pprint(states[-1]['M'])
             train_writer.add_summary(summary, step)
 
@@ -101,7 +101,7 @@ def run(ntm, config, sess):
 
     # Load the dataset from the file and get training sets
     dset = dataset.Dataset(config.graph_size, config.dataset_dir)
-    input_set, target_set = dset.get_validation_data(config.val_set_size)
+    input_set, target_set, lengths = dset.get_validation_data(config.val_set_size)
 
     error_sum = 0.0
     for idx, _ in enumerate(input_set):
@@ -125,8 +125,8 @@ def run(ntm, config, sess):
 
         if idx % print_interval == 0:
             print(
-                "[%5d] %.5f"
-                % (idx, error_sum/(idx +1)))
+                "[%d:%d] %.5f"
+                % (idx, lengths[idx], error_sum/(idx +1)))
             print(error)
 
     final_error = error_sum/config.test_set_size

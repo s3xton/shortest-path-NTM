@@ -36,6 +36,7 @@ class Dataset:
                 max_per_bin = int(draw_size/(len(draw_set)-1))
             input_set = []
             target_set = []
+            lengths = []
             for i in range(1, len(draw_set)):
                 path_bin = draw_set[i]
                 if draw_size == 0:
@@ -48,7 +49,8 @@ class Dataset:
                     inp, target = self.encode_graph_data(graph, start, end, path)
                     input_set.append(inp)
                     target_set.append(target)
-            return input_set, target_set
+                    lengths.append(len(path))
+            return input_set, target_set, lengths
         else:
             print("[!] There are only %d training examples. You asked for %d"
                   %(total_size, draw_size))

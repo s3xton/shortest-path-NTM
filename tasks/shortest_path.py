@@ -20,9 +20,6 @@ def train(ntm, config, sess):
     if not os.path.isdir("dataset_files"):
         raise Exception(" [!] Directory dataset_files not found")
 
-    task_dir = "%s_%s_%s" % (config.task, config.min_size, config.max_size)
-    summary_dir = os.path.join(config.summary_dir, task_dir)
-
     # Delimiter flag for start and end
     start_symbol = np.ones([config.input_dim], dtype=np.float32)
     end_symbol = np.ones([config.input_dim], dtype=np.float32)
@@ -36,9 +33,9 @@ def train(ntm, config, sess):
     if config.continue_train is True:
         ntm.load(config.checkpoint_dir, config.task, strict=config.continue_train is True)
         print(" [*] Loading summaries...")
-        train_writer = tf.summary.FileWriterCache.get(summary_dir)
+        train_writer = tf.summary.FileWriterCache.get(config.summary_dir)
     else:
-        train_writer = tf.summary.FileWriter(summary_dir, sess.graph)
+        train_writer = tf.summary.FileWriter(config.summary_dir, sess.graph)
 
     print(" [*] Loading dataset...")
     # Load the dataset from the file and get training sets
@@ -91,9 +88,6 @@ def run(ntm, config, sess):
     if not os.path.isdir("dataset_files"):
         raise Exception(" [!] Directory dataset_files not found")
 
-    task_dir = "%s_%s_%s" % (config.task, config.min_size, config.max_size)
-    summary_dir = os.path.join(config.summary_dir, task_dir)
-
     # Delimiter flag for start and end
     start_symbol = np.ones([config.input_dim], dtype=np.float32)
     end_symbol = np.ones([config.input_dim], dtype=np.float32)
@@ -132,7 +126,7 @@ def run(ntm, config, sess):
     final_error = error_sum/config.test_set_size
     print("Final error rate: %.5f" % final_error)
 
-    with open(summary_dir + '/error.csv', 'w', newline='') as csvfile:
+    with open(config.summary_dir + '/error.csv', 'w', newline='') as csvfile:
         writer = csv.writer(csvfile, delimiter=' ',
                             quotechar='|', quoting=csv.QUOTE_MINIMAL)
         writer.writerow("%.5f" % final_error)

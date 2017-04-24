@@ -114,14 +114,14 @@ def run(ntm, config, sess):
             ntm.end_symbol: end_symbol
         })
 
-        error = sess.run(ntm.error, feed_dict=feed_dict)
+        error, step = sess.run([ntm.error, ntm.global_step], feed_dict=feed_dict)
 
         error_sum += error
 
         if idx % print_interval == 0:
             print(
-                "[%d:%d] %.5f"
-                % (idx, lengths[idx], error_sum/(idx +1)))
+                "[%d:%d] %.5f %d"
+                % (idx, lengths[idx], error_sum/(idx +1), step))
             print(error)
 
     final_error = error_sum/config.test_set_size

@@ -123,7 +123,6 @@ def run(ntm, config, sess):
                 "[%d:%d] %.5f"
                 % (idx, lengths[idx], error_sum/(idx +1)))
             print(error)
-            print(np.array(mask))
 
     final_error = error_sum/config.test_set_size
     print("Final error rate: %.5f" % final_error)

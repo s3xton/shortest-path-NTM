@@ -128,13 +128,14 @@ def run(ntm, config, sess):
             "[%d:%d] %.5f %d"
             % (idx, lengths[idx], error_sum/(idx +1), step))
         print(error)
-        '''
+        
         print("pred:")
         print(np.array(p_a))
         print(np.array(p_b))
         print("target:")
         print(np.array(t_a))
         print(np.array(t_b))
+        '''
         print("original:")
         print(unencoded[idx][0].edge_list)
         print(unencoded[idx][3])

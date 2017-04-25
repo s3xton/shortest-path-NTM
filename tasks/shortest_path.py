@@ -114,11 +114,12 @@ def run(ntm, config, sess):
             ntm.end_symbol: end_symbol
         })
 
-        error, step, p_a, p_b, t_a, t_b = sess.run([ntm.error, ntm.global_step,
+        error, step, p_a, p_b, t_a, t_b, true_out = sess.run([ntm.error, ntm.global_step,
                                                     ntm.pred_argmax_a,
                                                     ntm.pred_argmax_b,
                                                     ntm.target_argmax_a,
-                                                    ntm.target_argmax_b], feed_dict=feed_dict)
+                                                    ntm.target_argmax_b,
+                                                    ntm.true_outputs], feed_dict=feed_dict)
 
         error_sum += error
 
@@ -138,6 +139,8 @@ def run(ntm, config, sess):
         print(unencoded[idx][3])
         print("encoded target:")
         print(np.array(target_seq))
+        print("true outputs:")
+        print(np.array(true_out))
 
     final_error = error_sum/config.test_set_size
     print("Final error rate: %.5f" % final_error)

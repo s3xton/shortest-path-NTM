@@ -281,11 +281,11 @@ class NTM(object):
         pred_a, pred_b = tf.split(self.answer_test, 2, 1)
         target_a, target_b = tf.split(self.true_outputs, 2, 1)
 
-        self.pred_argmax_a = tf.argmax(target_a, 1)
-        self.pred_argmax_b = tf.argmax(target_b, 1)
+        self.pred_argmax_a = tf.argmax(pred_a, 1)
+        self.pred_argmax_b = tf.argmax(pred_b, 1)
 
-        self.target_argmax_a = tf.argmax(pred_a, 1)
-        self.target_argmax_b = tf.argmax(pred_b, 1)
+        self.target_argmax_a = tf.argmax(target_a, 1)
+        self.target_argmax_b = tf.argmax(target_b, 1)
 
         mistake_a = tf.not_equal(self.pred_argmax_a, self.target_argmax_a)
         mistake_b = tf.not_equal(self.pred_argmax_b, self.target_argmax_b)

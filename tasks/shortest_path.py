@@ -122,22 +122,22 @@ def run(ntm, config, sess):
 
         error_sum += error
 
-        if idx % print_interval == 0:
-            print(
-                "[%d:%d] %.5f %d"
-                % (idx, lengths[idx], error_sum/(idx +1), step))
-            print(error)
-            print("pred:")
-            print(np.array(p_a))
-            print(np.array(p_b))
-            print("target:")
-            print(np.array(t_a))
-            print(np.array(t_b))
-            print("original:")
-            print(unencoded[idx][0].edge_list)
-            print(unencoded[idx][3])
-            print("encoded target:")
-            print(target_seq)
+        #if idx % print_interval == 0:
+        print(
+            "[%d:%d] %.5f %d"
+            % (idx, lengths[idx], error_sum/(idx +1), step))
+        print(error)
+        print("pred:")
+        print(np.array(p_a))
+        print(np.array(p_b))
+        print("target:")
+        print(np.array(t_a))
+        print(np.array(t_b))
+        print("original:")
+        print(unencoded[idx][0].edge_list)
+        print(unencoded[idx][3])
+        print("encoded target:")
+        print(np.array(target_seq))
 
     final_error = error_sum/config.test_set_size
     print("Final error rate: %.5f" % final_error)

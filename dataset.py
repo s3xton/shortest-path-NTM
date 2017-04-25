@@ -33,12 +33,12 @@ class Dataset:
 
         if draw_size < total_size:
             if draw_size != 0:
-                max_per_bin = int(draw_size/(len(draw_set)-1))
+                max_per_bin = int(draw_size/(len(draw_set)))
             input_set = []
             target_set = []
             lengths = []
-            dist = []
-            for i in range(1, len(draw_set)):
+            dist = {}
+            for i in range(0, len(draw_set)):
                 path_bin = draw_set[i]
                 if draw_size == 0:
                     max_per_bin = len(path_bin)
@@ -51,7 +51,7 @@ class Dataset:
                     input_set.append(inp)
                     target_set.append(target)
                     lengths.append(len(path))
-                    dist.append(len(input_set))
+                dist[i+1] = max_per_bin
             return input_set, target_set, lengths, dist
         else:
             print("[!] There are only %d training examples. You asked for %d"

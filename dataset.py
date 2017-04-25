@@ -37,6 +37,7 @@ class Dataset:
             input_set = []
             target_set = []
             lengths = []
+            dist = []
             for i in range(1, len(draw_set)):
                 path_bin = draw_set[i]
                 if draw_size == 0:
@@ -50,7 +51,8 @@ class Dataset:
                     input_set.append(inp)
                     target_set.append(target)
                     lengths.append(len(path))
-            return input_set, target_set, lengths
+                    dist.append(len(input_set))
+            return input_set, target_set, lengths, dist
         else:
             print("[!] There are only %d training examples. You asked for %d"
                   %(total_size, draw_size))

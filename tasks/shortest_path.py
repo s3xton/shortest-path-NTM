@@ -40,8 +40,8 @@ def train(ntm, config, sess):
     print(" [*] Loading dataset...")
     # Load the dataset from the file and get training sets
     dset = dataset.Dataset(config.graph_size, config.dataset_dir)
-    input_set, target_set, lengths = dset.get_training_data(config.train_set_size)
-
+    input_set, target_set, lengths, dist = dset.get_training_data(config.train_set_size)
+    print(dist)
 
     # Start training
     print(" [*] Starting training")
@@ -78,7 +78,7 @@ def train(ntm, config, sess):
                 % (idx, lengths[idx], cost, time.time() - start_time))
             #utils.pprint(states[-1]['M'])
             train_writer.add_summary(summary, step)
-
+    print(dist)
     # Cleanup
     train_writer.close
     train_writer.flush
@@ -96,8 +96,8 @@ def run(ntm, config, sess):
 
     # Load the dataset from the file and get training sets
     dset = dataset.Dataset(config.graph_size, config.dataset_dir)
-    input_set, target_set, lengths = dset.get_validation_data(config.val_set_size)
-
+    input_set, target_set, lengths, dist = dset.get_validation_data(config.val_set_size)
+    print(dist)
     error_sum = 0.0
     for idx, _ in enumerate(input_set):
         # Get inputs
@@ -126,7 +126,7 @@ def run(ntm, config, sess):
 
     final_error = error_sum/config.test_set_size
     print("Final error rate: %.5f" % final_error)
-
+    print(dist)
     with open(config.summary_dir + '/error.csv', 'w', newline='') as csvfile:
         writer = csv.writer(csvfile, delimiter=' ',
                             quotechar='|', quoting=csv.QUOTE_MINIMAL)

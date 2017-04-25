@@ -103,5 +103,5 @@ class Dataset:
 
     def __decimal_to_onehot(self, decimal_digit):
         one_hot = [0] * 10
-        one_hot[-decimal_digit-1] = 1
+        one_hot[decimal_digit] = 1
         return one_hot

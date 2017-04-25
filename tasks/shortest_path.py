@@ -40,7 +40,7 @@ def train(ntm, config, sess):
     print(" [*] Loading dataset...")
     # Load the dataset from the file and get training sets
     dset = dataset.Dataset(config.graph_size, config.dataset_dir)
-    input_set, target_set, lengths, dist = dset.get_training_data(config.train_set_size)
+    input_set, target_set, lengths, dist, _ = dset.get_training_data(config.train_set_size)
     print(dist)
 
     # Start training
@@ -96,7 +96,7 @@ def run(ntm, config, sess):
 
     # Load the dataset from the file and get training sets
     dset = dataset.Dataset(config.graph_size, config.dataset_dir)
-    input_set, target_set, lengths, dist = dset.get_validation_data(config.val_set_size)
+    input_set, target_set, lengths, dist, unencoded = dset.get_validation_data(config.val_set_size)
     print(dist)
     error_sum = 0.0
     for idx, _ in enumerate(input_set):
@@ -114,7 +114,11 @@ def run(ntm, config, sess):
             ntm.end_symbol: end_symbol
         })
 
-        error, step = sess.run([ntm.error, ntm.global_step], feed_dict=feed_dict)
+        error, step, p_a, p_b, t_a, t_b = sess.run([ntm.error, ntm.global_step,
+                                                    ntm.pred_argmax_a,
+                                                    ntm.pred_argmax_b,
+                                                    ntm.target_argmax_a,
+                                                    ntm.target_argmax_b], feed_dict=feed_dict)
 
         error_sum += error
 
@@ -123,6 +127,12 @@ def run(ntm, config, sess):
                 "[%d:%d] %.5f %d"
                 % (idx, lengths[idx], error_sum/(idx +1), step))
             print(error)
+            print(p_a)
+            print(p_b)
+            print(t_a)
+            print(t_b)
+            print(unencoded[0].edge_list)
+            print(unencoded[3])
 
     final_error = error_sum/config.test_set_size
     print("Final error rate: %.5f" % final_error)

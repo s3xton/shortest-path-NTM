@@ -38,6 +38,7 @@ class Dataset:
             target_set = []
             lengths = []
             dist = {}
+            input_set_unencoded = []
             for i in range(0, len(draw_set)):
                 path_bin = draw_set[i]
                 if draw_size == 0:
@@ -51,8 +52,9 @@ class Dataset:
                     input_set.append(inp)
                     target_set.append(target)
                     lengths.append(len(path))
+                    input_set_unencoded.append(path_bin[j])
                 dist[i+1] = max_per_bin
-            return input_set, target_set, lengths, dist
+            return input_set, target_set, lengths, dist, input_set_unencoded
         else:
             print("[!] There are only %d training examples. You asked for %d"
                   %(total_size, draw_size))

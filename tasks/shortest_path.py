@@ -128,6 +128,7 @@ def run(ntm, config, sess):
             "[%d:%d] %.5f %d"
             % (idx, lengths[idx], error_sum/(idx +1), step))
         print(error)
+        '''
         print("pred:")
         print(np.array(p_a))
         print(np.array(p_b))
@@ -141,6 +142,7 @@ def run(ntm, config, sess):
         print(np.array(target_seq))
         print("true outputs:")
         print(np.array(true_out))
+        '''
 
     final_error = error_sum/config.test_set_size
     print("Final error rate: %.5f" % final_error)

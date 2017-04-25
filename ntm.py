@@ -35,6 +35,7 @@ def sp_loss_function(labels, inputs):
 
     inputs_a, inputs_b = tf.split(inputs, 2, 0)
     labels_a, labels_b = tf.split(labels, 2, 0)
+    print(labels.get_shape())
 
     loss_a = tf.nn.softmax_cross_entropy_with_logits(labels=labels_a, logits=inputs_a)
     loss_b = tf.nn.softmax_cross_entropy_with_logits(labels=labels_b, logits=inputs_b)

@@ -136,6 +136,8 @@ def run(ntm, config, sess):
             print("original:")
             print(unencoded[idx][0].edge_list)
             print(unencoded[idx][3])
+            print("encoded target:")
+            print(target_seq)
 
     final_error = error_sum/config.test_set_size
     print("Final error rate: %.5f" % final_error)

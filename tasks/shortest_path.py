@@ -33,9 +33,9 @@ def train(ntm, config, sess):
     if config.continue_train is True:
         ntm.load(config.checkpoint_dir, config.task, strict=config.continue_train is True)
         print(" [*] Loading summaries...")
-        train_writer = tf.summary.FileWriterCache.get(config.summary_dir)
+        train_writer = tf.summary.FileWriterCache.get(config.checkpoint_dir)
     else:
-        train_writer = tf.summary.FileWriter(config.summary_dir, sess.graph)
+        train_writer = tf.summary.FileWriter(config.checkpoint_dir, sess.graph)
 
     print(" [*] Loading dataset...")
     # Load the dataset from the file and get training sets
@@ -148,7 +148,7 @@ def run(ntm, config, sess):
     final_error = error_sum/config.test_set_size
     print("Final error rate: %.5f" % final_error)
     print(dist)
-    with open(config.summary_dir + '/error.csv', 'w', newline='') as csvfile:
+    with open(config.checkpoint_dir + '/error.csv', 'w', newline='') as csvfile:
         writer = csv.writer(csvfile, delimiter=' ',
                             quotechar='|', quoting=csv.QUOTE_MINIMAL)
         writer.writerow("%.5f" % final_error)

@@ -41,18 +41,34 @@ class Dataset:
             input_set_unencoded = []
             for i in range(0, len(draw_set)):
                 path_bin = draw_set[i]
+                # temporary input set used to store before sorting
+                temp_elengths = []
+                temp_plengths = []
+                temp_input = []
+                temp_target = []
+                temp_unencoded = []
+
                 if draw_size == 0:
                     max_per_bin = len(path_bin)
                 for j in range(0, max_per_bin):
+                    # Element stuff
                     graph = path_bin[j][0]
                     start = path_bin[j][1]
                     end = path_bin[j][2]
                     path = path_bin[j][3]
                     inp, target = self.encode_graph_data(graph, start, end, path)
-                    input_set.append(inp)
-                    target_set.append(target)
-                    lengths.append(len(path))
-                    input_set_unencoded.append(path_bin[j])
+
+                    # Add to various lists
+                    temp_elengths.append(len(graph.edge_list))
+                    temp_plengths.append(len(path))
+                    temp_input.append(inp)
+                    temp_target.append(target)
+                    temp_unencoded.append(path_bin[j])
+
+                print(temp_elengths)
+                input_set += [x for (y, x) in sorted(zip(temp_elengths, temp_input), key=lambda pair: pair[0])]
+                target_set += [x for (y, x) in sorted(zip(temp_elengths, temp_target), key=lambda pair: pair[0])]
+                input_set_unencoded += [x for (y, x) in sorted(zip(temp_elengths, temp_unencoded), key=lambda pair: pair[0])]
                 dist[i+1] = max_per_bin
             return input_set, target_set, lengths, dist, input_set_unencoded
         else:

@@ -65,10 +65,10 @@ class Dataset:
                     temp_target.append(target)
                     temp_unencoded.append(path_bin[j])
 
-                print(temp_elengths)
                 input_set += [x for (y, x) in sorted(zip(temp_elengths, temp_input), key=lambda pair: pair[0])]
                 target_set += [x for (y, x) in sorted(zip(temp_elengths, temp_target), key=lambda pair: pair[0])]
                 input_set_unencoded += [x for (y, x) in sorted(zip(temp_elengths, temp_unencoded), key=lambda pair: pair[0])]
+                lengths += [x for (y, x) in sorted(zip(temp_elengths, temp_plengths), key=lambda pair: pair[0])]
                 dist[i+1] = max_per_bin
             return input_set, target_set, lengths, dist, input_set_unencoded
         else:

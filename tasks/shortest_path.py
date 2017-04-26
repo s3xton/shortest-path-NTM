@@ -17,7 +17,7 @@ def train(ntm, config, sess):
         print(" [!] Directory %s not found. Creating." % config.checkpoint_dir)
         os.makedirs(config.checkpoint_dir)
 
-    if not os.path.isdir("dataset_files"):
+    if not os.path.isdir(config.dataset_dir):
         raise Exception(" [!] Directory dataset_files not found")
 
     # Delimiter flag for start and end

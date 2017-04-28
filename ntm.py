@@ -219,7 +219,7 @@ class NTM(object):
 
 
             self.loss = sequence_loss(
-                logits=self.answer,
+                logits=self.answer_test,
                 targets=self.true_outputs,
                 weights=[1] * self.max_length,#seq_length,
                 average_across_timesteps=False,

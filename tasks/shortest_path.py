@@ -12,6 +12,7 @@ from utils import pprint
 print_interval = 1
 
 def train(ntm, config, sess):
+    np.set_printoptions(threshold=np.nan)
     # Check all relevant directories are present
     if not os.path.isdir(config.checkpoint_dir):
         print(" [!] Directory %s not found. Creating." % config.checkpoint_dir)
@@ -40,7 +41,7 @@ def train(ntm, config, sess):
     print(" [*] Loading dataset...")
     # Load the dataset from the file and get training sets
     dset = dataset.Dataset(config.graph_size, config.dataset_dir)
-    input_set, target_set, lengths, dist, _ = dset.get_training_data(config.train_set_size)
+    input_set, target_set, lengths, dist, unencoded = dset.get_training_data(config.train_set_size)
     print(dist)
 
     # Start training
@@ -62,10 +63,12 @@ def train(ntm, config, sess):
         })
 
         # Run the NTM
-        _, cost, step, summary = sess.run([ntm.optim,
+        _, cost, step, summary, answer, loss = sess.run([ntm.optim,
                                            ntm.get_loss(),
                                            ntm.global_step,
-                                           ntm.merged], feed_dict=feed_dict)
+                                           ntm.merged,
+                                           ntm.answer,
+                                           ntm.loss], feed_dict=feed_dict)
 
         # Save stuff, print stuff
         if (idx+1) % 1000 == 0:
@@ -77,7 +80,17 @@ def train(ntm, config, sess):
                 "[%d:%d] %.10f (%.1fs)"
                 % (idx, lengths[idx], cost, time.time() - start_time))
             #utils.pprint(states[-1]['M'])
+            print("Loss:")
+            print(np.array(loss))
             train_writer.add_summary(summary, step)
+
+        if cost < 0.01:
+            print("True:")
+            print(np.array(unencoded[idx][3]))
+            print("Answer:")
+            print(np.array(tf.argmax(tf.split(answer, 2, 1), 1)))
+            
+
     print(dist)
     # Cleanup
     train_writer.close
@@ -114,7 +127,7 @@ def run(ntm, config, sess):
             ntm.end_symbol: end_symbol
         })
 
-        error, step, p_a, p_b, t_a, t_b, true_out = sess.run([ntm.error, ntm.global_step,
+        error, step, p_a, p_b, t_a, t_b, true_out, loss = sess.run([ntm.error, ntm.global_step,
                                                     ntm.pred_argmax_a,
                                                     ntm.pred_argmax_b,
                                                     ntm.target_argmax_a,

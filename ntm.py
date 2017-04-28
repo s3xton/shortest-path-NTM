@@ -31,9 +31,9 @@ def lazy_property(function):
 def softmax_loss_function(labels, inputs):
     return tf.nn.sigmoid_cross_entropy_with_logits(labels=labels, logits=inputs)
 
-def sp_loss_function(labels, inputs):
+def sp_loss_function(labels, logits):
 
-    inputs_a, inputs_b = tf.split(inputs, 2, 0)
+    inputs_a, inputs_b = tf.split(logits, 2, 0)
     labels_a, labels_b = tf.split(labels, 2, 0)
 
     loss_a = tf.nn.softmax_cross_entropy_with_logits(labels=labels_a, logits=inputs_a)
@@ -268,11 +268,11 @@ class NTM(object):
 
 
     @lazy_property
-    def get_prediction(self):
+    def answer_train(self):
         output_a, output_b = tf.split(self.answer, 2, 1)
 
-        pred_a = tf.nn.softmax(output_a)
-        pred_b = tf.nn.softmax(output_b)
+        pred_a = tf.argmax(output_a, 1)
+        pred_b = tf.argmax(output_b, 1)
 
         return pred_a, pred_b
 

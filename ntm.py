@@ -227,15 +227,14 @@ class NTM(object):
                 average_across_batch=False,
                 softmax_loss_function=sp_loss_function)
 
-            
-
             if not self.params:
                 self.params = tf.trainable_variables()
 
-            for x in self.params:
-                if x.name == "NTM-shortest_path/output/Linear/output_w:0":
-                    output_w = x
+            for var in self.params:
+                if var.name == "NTM-shortest_path/output/Linear/output_w:0":
+                    output_w = var
                     print(" [*] Applying L2 regularisation")
+            
             regulariser = tf.nn.l2_loss(output_w)
             self.loss = tf.reduce_mean(self.loss + self.beta * regulariser)
             tf.summary.scalar('loss', self.loss)

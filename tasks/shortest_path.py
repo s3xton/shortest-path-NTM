@@ -63,7 +63,7 @@ def train(ntm, config, sess):
         })
 
         # Run the NTM
-        _, cost, step, summary, answer, scope = sess.run([ntm.optim,
+        _, cost, step, summary, answer = sess.run([ntm.optim,
                                            ntm.get_loss(),
                                            ntm.global_step,
                                            ntm.merged,

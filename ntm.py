@@ -238,6 +238,9 @@ class NTM(object):
             if not self.params:
                 self.params = tf.trainable_variables()
 
+            for x in self.params:
+                print(x.name)
+
             # grads, norm = tf.clip_by_global_norm(
             #                  tf.gradients(loss, self.params), 5)
 

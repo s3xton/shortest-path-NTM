@@ -107,7 +107,6 @@ class NTMCell(object):
         """Logistic sigmoid output layers."""
 
         with tf.variable_scope('output'):
-            self.scope= tf.get_variable_scope()
             logit = Linear(output, self.output_dim, name='output')
             return logit
 

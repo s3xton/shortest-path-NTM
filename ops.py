@@ -75,6 +75,7 @@ def Linear(input_, output_size, stddev=0.5,
         output_size: the size of output matrix or vector
     """
     with tf.variable_scope("Linear", reuse=reuse):
+        print(tf.get_variable_scope())
         if type(input_) == np.ndarray:
             shape = input_.shape
         else:

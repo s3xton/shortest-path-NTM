@@ -72,8 +72,8 @@ def main(_):
         if FLAGS.is_train:
             task.train(ntm, FLAGS, sess)
 
-        #if FLAGS.is_test:
-            #ntm.load(FLAGS.checkpoint_dir, FLAGS.task)
+        if FLAGS.is_test:
+            ntm.load(FLAGS.checkpoint_dir, FLAGS.task)
             task.run(ntm, FLAGS, sess)
 
 

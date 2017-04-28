@@ -234,7 +234,7 @@ class NTM(object):
                 if var.name == "NTM-shortest_path/output/Linear/output_w:0":
                     output_w = var
                     print(" [*] Applying L2 regularisation")
-            
+
             regulariser = tf.nn.l2_loss(output_w)
             self.loss = tf.reduce_mean(self.loss + self.beta * regulariser)
             tf.summary.scalar('loss', self.loss)

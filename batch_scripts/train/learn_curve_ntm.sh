@@ -17,4 +17,4 @@ python3 /home/conor/Documents/Dissertation/main.py --is_LSTM_mode False --is_tra
 # 90k
 python3 /home/conor/Documents/Dissertation/main.py --is_LSTM_mode False --is_train True --continue_train False --train_set_size 90000 --checkpoint_dir "/home/conor/Documents/Dissertation/checkpoint_ntm/learn_curve/90k" --dataset_dir "/home/conor/Documents/Dissertation/dataset_files"
 # 100k
-python3 /home/conor/Documents/Dissertation/main.py --is_LSTM_mode False --is_train True --continue_train False --train_set_size 100000 --checkpoint_dir "/home/conor/Documents/Dissertation/checkpoint_ntm/learn_curve/100k" --dataset_dir "/home/conor/Documents/Dissertation/dataset_files"
+python3 /home/conor/Documents/Dissertation/main.py --is_LSTM_mode False --is_train True --continue_train False --train_set_size 0 --checkpoint_dir "/home/conor/Documents/Dissertation/checkpoint_ntm/learn_curve/100k" --dataset_dir "/home/conor/Documents/Dissertation/dataset_files"

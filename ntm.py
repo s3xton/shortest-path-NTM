@@ -271,8 +271,8 @@ class NTM(object):
     def answer_train(self):
         output_a, output_b = tf.split(self.answer, 2, 1)
 
-        pred_a = tf.argmax(output_a, 1)
-        pred_b = tf.argmax(output_b, 1)
+        pred_a = tf.argmax(tf.nn.softmax(output_a), 1)
+        pred_b = tf.argmax(tf.nn.softmax(output_b), 1)
 
         return pred_a, pred_b
 
@@ -281,8 +281,8 @@ class NTM(object):
         pred_a, pred_b = tf.split(self.answer_test, 2, 1)
         target_a, target_b = tf.split(self.true_outputs, 2, 1)
 
-        self.pred_argmax_a = tf.argmax(pred_a, 1)
-        self.pred_argmax_b = tf.argmax(pred_b, 1)
+        self.pred_argmax_a = tf.argmax(tf.nn.softmax(pred_a), 1)
+        self.pred_argmax_b = tf.argmax(tf.nn.softmax(pred_b), 1)
 
         self.target_argmax_a = tf.argmax(target_a, 1)
         self.target_argmax_b = tf.argmax(target_b, 1)

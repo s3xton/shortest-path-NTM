@@ -67,8 +67,7 @@ def train(ntm, config, sess):
                                            ntm.get_loss(),
                                            ntm.global_step,
                                            ntm.merged,
-                                           ntm.answer,
-                                           ntm.loss], feed_dict=feed_dict)
+                                           ntm.answer_train], feed_dict=feed_dict)
 
         # Save stuff, print stuff
         if (idx+1) % 1000 == 0:
@@ -88,9 +87,7 @@ def train(ntm, config, sess):
             print("True:")
             print(np.array(unencoded[idx][3]))
             print("Answer:")
-            a, b = tf.split(answer, 2, 1)
-            print(np.array(tf.argmax(a)))
-            print(np.array(tf.argmax(b)))
+            print(np.array(answer))
 
 
     print(dist)

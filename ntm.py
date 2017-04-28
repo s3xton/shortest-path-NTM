@@ -47,7 +47,7 @@ class NTM(object):
     def __init__(self, cell, sess,
                  min_length, max_length, min_size, max_size,
                  min_grad=-10, max_grad=+10,
-                 lr=1e-4, momentum=0.9, decay=0.95,
+                 lr=1e-4, momentum=0.9, decay=0.95, beta=0.01,
                  scope="NTM", forward_only=False):
         """Create a neural turing machine specified by NTMCell "cell".
 
@@ -72,6 +72,7 @@ class NTM(object):
         self.lr = lr
         self.momentum = momentum
         self.decay = decay
+        self.beta = beta
 
         self.min_grad = min_grad
         self.max_grad = max_grad
@@ -225,6 +226,12 @@ class NTM(object):
                 average_across_timesteps=False,
                 average_across_batch=False,
                 softmax_loss_function=sp_loss_function)
+
+            with tf.variable_scope("Linear"):
+                output_w = tf.get_variable("output_w")
+
+            regulariser = tf.nn.l2_loss(output_w)
+            self.loss = tf.reduce_mean(self.loss + self.beta * regulariser)
 
             tf.summary.scalar('loss', self.loss)
 

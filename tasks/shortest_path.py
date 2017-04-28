@@ -79,8 +79,6 @@ def train(ntm, config, sess):
                 "[%d:%d] %.10f (%.1fs)"
                 % (idx, lengths[idx], cost, time.time() - start_time))
             #utils.pprint(states[-1]['M'])
-            print("Loss:")
-            print(np.array(loss))
             train_writer.add_summary(summary, step)
 
         if cost < 0.01:

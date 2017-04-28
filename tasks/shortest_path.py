@@ -88,8 +88,10 @@ def train(ntm, config, sess):
             print("True:")
             print(np.array(unencoded[idx][3]))
             print("Answer:")
-            print(np.array(tf.argmax(tf.split(answer, 2, 1), 1)))
-            
+            a, b = tf.split(answer, 2, 1)
+            print(np.array(tf.argmax(a)))
+            print(np.array(tf.argmax(b)))
+
 
     print(dist)
     # Cleanup

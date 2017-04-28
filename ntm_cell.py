@@ -36,7 +36,7 @@ class NTMCell(object):
         self.write_head_size = write_head_size
         self.read_head_size = read_head_size
         self.is_LSTM_mode = is_LSTM_mode
-
+        
         self.depth = 0
         self.states = []
 
@@ -107,6 +107,7 @@ class NTMCell(object):
         """Logistic sigmoid output layers."""
 
         with tf.variable_scope('output'):
+            self.scope= tf.get_variable_scope()
             logit = Linear(output, self.output_dim, name='output')
             return logit
 

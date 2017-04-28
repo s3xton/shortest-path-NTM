@@ -230,8 +230,8 @@ class NTM(object):
             with tf.variable_scope("ntm_cell/Linear"):
                 output_w = tf.get_variable("output_w")
 
-            regulariser = tf.nn.l2_loss(output_w)
-            self.loss = tf.reduce_mean(self.loss + self.beta * regulariser)
+            #regulariser = tf.nn.l2_loss(output_w)
+            #self.loss = tf.reduce_mean(self.loss + self.beta * regulariser)
 
             tf.summary.scalar('loss', self.loss)
 

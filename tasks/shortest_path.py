@@ -63,11 +63,12 @@ def train(ntm, config, sess):
         })
 
         # Run the NTM
-        _, cost, step, summary, answer = sess.run([ntm.optim,
+        _, cost, step, summary, answer, scope = sess.run([ntm.optim,
                                            ntm.get_loss(),
                                            ntm.global_step,
                                            ntm.merged,
-                                           ntm.answer_train], feed_dict=feed_dict)
+                                           ntm.answer_train,
+                                           ntm.cell.scope], feed_dict=feed_dict)
 
         # Save stuff, print stuff
         if (idx+1) % 1000 == 0:
@@ -80,6 +81,7 @@ def train(ntm, config, sess):
                 % (idx, lengths[idx], cost, time.time() - start_time))
             #utils.pprint(states[-1]['M'])
             train_writer.add_summary(summary, step)
+            print(scope)
 
         if cost < 0.01:
             print("True:")

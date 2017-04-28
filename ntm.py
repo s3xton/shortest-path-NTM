@@ -227,8 +227,8 @@ class NTM(object):
                 average_across_batch=False,
                 softmax_loss_function=sp_loss_function)
 
-            with tf.variable_scope("ntm_cell/Linear"):
-                output_w = tf.get_variable("output_w")
+            #with tf.variable_scope("ntm_cell/Linear"):
+             #   output_w = tf.get_variable("output_w")
 
             #regulariser = tf.nn.l2_loss(output_w)
             #self.loss = tf.reduce_mean(self.loss + self.beta * regulariser)

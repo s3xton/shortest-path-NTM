@@ -14,9 +14,6 @@ def build_dataset_file(train_size,
     directory = "dataset_files"
     if not os.path.exists(directory):
         os.makedirs(directory)
-        os.makedirs(directory+"/train")
-        os.makedirs(directory+"/val")
-        os.makedirs(directory+"/test")
 
     train_bins = {}
     val_bins = {}
@@ -28,11 +25,7 @@ def build_dataset_file(train_size,
         val_bins[i] = []
         test_bins[i] = []
 
-    num_bins = graph_size - 1
-    train_bin_size = train_size/num_bins
-    val_bin_size = val_size/num_bins
-    test_bin_size = test_size/num_bins
-    bin_sizes = {"train":train_bin_size, "val":val_bin_size, "test":test_bin_size}
+    set_size = {"train":train_size, "val":val_size, "test":test_size}
 
     total_size = train_size + val_size + test_size
 
@@ -63,20 +56,18 @@ def build_dataset_file(train_size,
 
             # Distribute it into the various num_bins
             for key in dset.keys():
-                if not inserted:
-                    if plength in dset[key]:
-                        dset[key][plength].append(element)
-                        adj = element[0].adjacency
-                        elem_tuple = (adj, element[1], element[2], element[3], element[4])
-                        element_dict[elem_tuple] = 1
-                        inserted = True
-                        # If the bin is full, pickle it and delete it
-                        if len(dset[key][plength]) == bin_sizes[key]:
-                            print("\n[*] Pickling {} bin_{}".format(key, plength))
-                            with open('dataset_files/{}/bin_{}.pkl'.format(key, plength), 'wb') as output:
-                                pickle.dump(dset[key][plength], output, pickle.HIGHEST_PROTOCOL)
-                            del dset[key][plength]
-                            gc.collect()
+                dset[key][plength].append(element)
+                adj = element[0].adjacency
+                elem_tuple = (adj, element[1], element[2], element[3], element[4])
+                element_dict[elem_tuple] = 1
+                inserted = True
+                # If the bin is full, pickle it and delete it
+                if len(dset[key]) == bin_sizes[key]:
+                    print("\n[*] Pickling {} bin_{}".format(key, plength))
+                    with open('dataset_files/{}/bin_{}.pkl'.format(key, plength), 'wb') as output:
+                        pickle.dump(dset[key][plength], output, pickle.HIGHEST_PROTOCOL)
+                    del dset[key][plength]
+                    gc.collect()
             if not inserted:
                 size_excess += 1
 
@@ -84,8 +75,40 @@ def build_dataset_file(train_size,
               %(j+1, total_size, collision_count, size_excess),
               end="\r")
 
+def build_intrinsic(total_size, graph_size):
+    dset = [0] * (graph_size+1)
+    collision_count = 0
+    size_excess = 0
+    element_dict = {}
+    
+    for j in range(total_size):
+        unique = False
+        # Get a unique element
+        while not unique:
+            graph = gr.Graph(graph_size, 0)
+            path = []
+            start, end = random.sample(graph.nodes, 2)
+            path = shortest_path(graph, start, end)
+            plength = len(path)
+            element = (graph,
+                        start,
+                        end,
+                        path,
+                        plength)
+
+            if not collision(element_dict, element) and plength == graph_size -1:
+                unique = True
+            else:
+                collision_count += 1
 
 
+            dset[plength] += 1
+
+        print("[*] Progress: %d/%d, collisions: %d, size excess:%d"
+              %(j+1, total_size, collision_count, size_excess),
+              end="\r")
+
+    print(dset)
 
 def dijkstra(graph, start):
     """

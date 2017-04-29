@@ -38,6 +38,7 @@ class Graph:
             node_b = random.choice(visited)
 
             unvisited.remove(node_a)
+            visited.append(node_a)
 
             edge = (node_a, node_b)
             self.edge_list.append(edge)
@@ -96,3 +97,12 @@ class Graph:
         self.size = len(nodes)
         self.edge_number = len(edge_list)
         self.__set_adjacency()
+
+    def is_line(self):
+        is_line = True
+        for node in self.nodes:
+            sum_edge = sum(self.adjacency[node])
+            if sum_edge > 2:
+                is_line = False
+
+        return is_line

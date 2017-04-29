@@ -103,7 +103,6 @@ def dijkstra(graph, start):
     nodes = graph.nodes
     adj = graph.adjacency
     Q = []
-
     dist = [0] * 10
     prev = [0] * 10
 

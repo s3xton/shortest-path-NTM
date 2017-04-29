@@ -22,28 +22,42 @@ class Graph:
         else:
             self.edge_number = edge_number
 
-        possible_edges = list(itertools.combinations(self.nodes, 2))
+        possible_edges = list(tuple(itertools.combinations(self.nodes, 2)))
+        #print(possible_edges)
+        # All graphs must be connected, therefore there is at least one spanning tree
+        # all nodes. Begin by forming this tree first, at random.
 
-        # All graphs must be connected, therefore there is at least one path connecting
-        # all nodes. Begin by forming this path first, at random.
-        shuffled_nodes = self.nodes
-        random.shuffle(shuffled_nodes)
-        for i in range(0, min_edges):
-            edge = (shuffled_nodes[i], shuffled_nodes[i + 1])
+        unvisited = list(self.nodes)
+        visited = []
+        root = random.choice(unvisited)
+        unvisited.remove(root)
+        visited.append(root)
+
+        while len(unvisited) != 0:
+            node_a = random.choice(unvisited)
+            node_b = random.choice(visited)
+
+            unvisited.remove(node_a)
+
+            edge = (node_a, node_b)
             self.edge_list.append(edge)
-
-            # Little bit inefficient having to check both orderings of the edge...
-            # Unavoidable?...
             if edge in possible_edges:
+                #print("removed0")
                 possible_edges.remove(edge)
-            else:
-                possible_edges.remove(edge[::-1]) # lol python syntax - ::-1 means reverse
+            if (edge[1], edge[0]) in possible_edges:
+                #print("removed1")
+                possible_edges.remove((edge[1], edge[0]))
 
+
+        #print("here")
+        #print(self.edge_list)
         # For many graphs, there will be more edges, add these now. Again maintaining
         # randomness in construction.
         remaining_edges = self.edge_number - min_edges
         for _ in range(0, remaining_edges):
-            self.edge_list.append(random.choice(possible_edges))
+            new_edge = random.choice(possible_edges)
+            self.edge_list.append(new_edge)
+            possible_edges.remove(new_edge)
 
         # Shuffle the graph so that there are definitely no patterns.
         random.shuffle(self.edge_list)
@@ -59,8 +73,13 @@ class Graph:
             adjacency.append([0] * 10)
 
         for edge in self.edge_list:
-            adjacency[edge[0]][edge[1]] = 1
-            adjacency[edge[1]][edge[0]] = 1
+            adjacency[edge[0]][edge[1]] += 1
+            adjacency[edge[1]][edge[0]] += 1
+
+            if adjacency[edge[0]][edge[1]] > 1:
+                print(" [!] Invalid graph!")
+            if adjacency[edge[1]][edge[0]] > 1:
+                print(" [!] Invalid graph!")
 
         self.adjacency = tuple(map(tuple, adjacency))
 

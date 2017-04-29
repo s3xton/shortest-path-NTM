@@ -7,23 +7,24 @@ import graph as gr
 class Dataset:
     #SET -> BINS -> [GRAPH | START | END | PATH | LENGTH]
     def __init__(self, graph_size, dataset_dir):
-        self.train_set = []
-        self.val_set = []
-        self.test_set = []
+        self.train_set_bins = []
+        self.val_set_bins = []
+        self.test_set_bins = []
 
-        with open("{}/train.pkl".format(dataset_dir), 'rb') as pickled_dataset:
-            self.train_set.append(pickle.load(pickled_dataset))
-        with open("{}/val.pkl".format(dataset_dir), 'rb') as pickled_dataset:
-            self.val_set.append(pickle.load(pickled_dataset))
-        with open("{}/test.pkl".format(dataset_dir), 'rb') as pickled_dataset:
-            self.test_set.append(pickle.load(pickled_dataset))
+        for i in range(1, graph_size):
+            with open("{}/train/bin_{}.pkl".format(dataset_dir, i), 'rb') as pickled_dataset:
+                self.train_set_bins.append(pickle.load(pickled_dataset))
+            with open("{}/val/bin_{}.pkl".format(dataset_dir, i), 'rb') as pickled_dataset:
+                self.val_set_bins.append(pickle.load(pickled_dataset))
+            with open("{}/test/bin_{}.pkl".format(dataset_dir, i), 'rb') as pickled_dataset:
+                self.test_set_bins.append(pickle.load(pickled_dataset))
 
 
     def get_validation_data(self, val_size=0):
-        return self.get_encoded_data(self.val_set, val_size)
+        return self.get_encoded_data(self.val_set_bins, val_size)
 
     def get_training_data(self, train_size=0):
-        return self.get_encoded_data(self.train_set, train_size)
+        return self.get_encoded_data(self.train_set_bins, train_size)
 
     def get_encoded_data(self, draw_set, draw_size):
         total_size = 0

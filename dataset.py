@@ -72,7 +72,7 @@ class Dataset:
                 dist[i+1] = max_per_bin
             return input_set, target_set, lengths, dist, input_set_unencoded
         else:
-            print("[!] There are only %d training examples. You asked for %d"
+            print(" [!] There are only %d training examples. You asked for %d"
                   %(total_size, draw_size))
 
 

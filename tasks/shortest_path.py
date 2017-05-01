@@ -36,7 +36,7 @@ def train(ntm, config, sess):
         print(" [*] Loading summaries...")
         train_writer = tf.summary.FileWriterCache.get(config.checkpoint_dir)
     else:
-        train_writer = tf.summary.FileWriter(config.checkpoint_dir, sess.graph)
+        train_writer = tf.summary.FileWriter(config.checkpoint_dir)
 
     print(" [*] Loading dataset...")
     # Load the dataset from the file and get training sets

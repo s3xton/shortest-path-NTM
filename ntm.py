@@ -161,7 +161,7 @@ class NTM(object):
                             with tf.name_scope("test"):
                                 with tf.name_scope("converter"):
                                     # For testing, use previous
-                                    # TODO CHECK THIS ACTUALLY WORKS AS INTENDED
+                                    # TODO THIS IS DEFINITELY WRONG - CHECK BEFORE TESTING
                                     out_a, out_b = tf.split(self.outputs_test[-1], 2)
                                     pred_a = tf.arg_max(tf.nn.softmax(out_a, name="test_soft_a"),
                                                         0,

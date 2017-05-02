@@ -70,7 +70,7 @@ def train(ntm, config, sess):
                                            ntm.answer_train], feed_dict=feed_dict)
 
         # Save stuff, print stuff
-        if (idx+1) % 1000 == 0:
+        if (idx+1) % 10000 == 0:
             print(" [*] Saving checkpoint")
             ntm.save(config.checkpoint_dir, config.task, step)
 

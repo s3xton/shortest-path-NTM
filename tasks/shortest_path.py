@@ -111,16 +111,15 @@ def run(ntm, config, sess):
     print(dist)
 
     # 1) Completely wrong
-    abs_error = {}
+    abs_error = []#[0] * config.graph_size - 1
     # 2) Where they were wrong
     pos_error = []
     # 3) The actual paths
     paths_output = []
 
+    lengths_count = [0] * config.graph_size - 1
     test_results = [abs_error, pos_error, paths_output]
 
-    for i in range(1, config.graph_size):
-        abs_error[i] = []
 
     # Run the actual test
     for idx, _ in enumerate(input_set):
@@ -143,12 +142,13 @@ def run(ntm, config, sess):
         error_count_edges, stripped_mistake, final_output = errors
 
         length = lengths[idx]
+        lengths_count[length-1] += 1
 
         # Record stuff
         if error_count_edges == 0:
-            abs_error[length].append(0)
+            abs_error.append(0)
         else:
-            abs_error[length].append(1)
+            abs_error.append(1)
 
         final_output = list(map(list, list(final_output)))
         paths_output.append(final_output)
@@ -161,6 +161,22 @@ def run(ntm, config, sess):
     with open('{}/results.pkl'.format(config.checkpoint_dir), 'wb') as output:
         pickle.dump(test_results, output, pickle.HIGHEST_PROTOCOL)
 
-    print(np.array(pos_error))
     print(np.sum(pos_error, 0))
 
+    sum_pos = np.sum(pos_error, 0)
+    percent_pos = []
+    for i, lcount in enumerate(lengths_count):
+        percent_pos.append(sum_pos[i] / lcount)
+
+    print(percent_pos)
+
+    with open(config.checkpoint_dir + '/error_abs.csv', 'w', newline='') as csvfile:
+        fieldnames = ['complete', 'first', 'second', 'third', 'fourth', 'fifth']
+        writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
+
+        writer.writerow({'complete':np.sum(abs_error),
+                         'first':percent_pos[0],
+                         'second':percent_pos[1],
+                         'third':percent_pos[2],
+                         'fourth':percent_pos[3],
+                         'fifth':percent_pos[4]})

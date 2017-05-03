@@ -154,8 +154,8 @@ def run(ntm, config, sess):
         paths_output.append(final_output)
         pos_error.append(stripped_mistake)
 
-        print("[{}:{}] error:{} output:{}".format(idx, length, error_count_edges, final_output))
-        print("    {}".format(unencoded[idx][0].edge_list))
+        print("[{}:{}] error:{}".format(idx, length, error_count_edges))
+        #print("    {}".format(unencoded[idx][0].edge_list))
 
 
     with open('{}/results.pkl'.format(config.checkpoint_dir), 'wb') as output:
@@ -172,7 +172,7 @@ def run(ntm, config, sess):
 
     print(percent_pos)
 
-    with open(config.checkpoint_dir + '/error_abs.csv', 'w', newline='') as csvfile:
+    with open(config.checkpoint_dir + '/error.csv', 'w', newline='') as csvfile:
         fieldnames = ['complete', 'first', 'second', 'third', 'fourth', 'fifth']
         writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
 

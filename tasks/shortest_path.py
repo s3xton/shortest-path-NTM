@@ -122,7 +122,7 @@ def run(ntm, config, sess):
 
     test_results = [abs_error, edges_error, nodes_error, valid_paths]
 
-    for i in range(1, config.graph_size+1):
+    for i in range(1, config.graph_size):
         abs_error[i] = []
         edges_error[i] = []
         nodes_error[i] = []
@@ -175,7 +175,7 @@ def run(ntm, config, sess):
     edge_overall = []
     node_overall = []
 
-    for i in range(1, config.graph_size+1):
+    for i in range(1, config.graph_size):
         # Mean
         mean["abs"].append(np.mean(np.array(abs_error[i])))
         mean["edge"].append(np.mean(np.array(edges_error[i])))
@@ -207,8 +207,8 @@ def run(ntm, config, sess):
         fieldnames = ['mean', 'SD', 'SE']
         writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
 
-        for i in range(config.graph_size):
-            writer.writerow({'mean':mean['abs'][i], 'SD':sd['abs'], 'SE':0})
+        for i in range(config.graph_size-1):
+            writer.writerow({'mean':mean['abs'][i], 'SD':sd['abs'][i], 'SE':0})
 
         writer.writerow({'mean':mean_abs_overall, 'SD':sd_abs_overall, 'SE':0})
 

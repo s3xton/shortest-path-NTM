@@ -161,7 +161,6 @@ class NTM(object):
                             with tf.name_scope("test"):
                                 with tf.name_scope("converter"):
                                     # For testing, use previous
-                                    # TODO THIS IS DEFINITELY WRONG - CHECK BEFORE TESTING
                                     out_a, out_b = tf.split(self.outputs_test[-1], 2)
                                     pred_a = tf.arg_max(tf.nn.softmax(out_a, name="test_soft_a"),
                                                         0,
@@ -169,8 +168,8 @@ class NTM(object):
                                     pred_b = tf.arg_max(tf.nn.softmax(out_b, name="test_soft_b"),
                                                         0,
                                                         "test_argm_b")
-                                    in_a = tf.one_hot(9 - pred_a, 10, name="one_hot_a")
-                                    in_b = tf.one_hot(9 - pred_b, 10, name="one_hot_b")
+                                    in_a = tf.one_hot(pred_a, 10, name="one_hot_a")
+                                    in_b = tf.one_hot(pred_b, 10, name="one_hot_b")
                                     s_input = tf.concat([prefix, in_a, in_b], 0, name="input_next")
 
                                 #self.test_predictions.append([pred_a, pred_b])
@@ -202,8 +201,8 @@ class NTM(object):
             with tf.name_scope("answer_filter"):
                 # So *very* hacky, but it works
                 true_stacked = tf.stack(self.true_outputs)
-                mask = tf.sign(tf.reduce_max(tf.abs(true_stacked), reduction_indices=1))
-                self.mask_full = tf.transpose(tf.reshape(tf.tile(mask, tf.constant([20])),
+                self.mask = tf.sign(tf.reduce_max(tf.abs(true_stacked), reduction_indices=1))
+                self.mask_full = tf.transpose(tf.reshape(tf.tile(self.mask, tf.constant([20])),
                                                          [20, self.max_length]))
 
                 # Train answer
@@ -285,26 +284,50 @@ class NTM(object):
         return pred_a, pred_b
 
     @lazy_property
-    def error(self):
-        pred_a, pred_b = tf.split(self.answer_test, 2, 1)
-        target_a, target_b = tf.split(self.true_outputs, 2, 1)
+    def error_count(self):
+        '''
+        @Returns
+        error_count_edges: the number of edges that were incorrect.
+        error_count_nodes: the number of nodes it got wrong in the sequence
+        final_output: the final output of the network, stripped of zeros
+        '''
+        with tf.name_scope("error"):
+            # Split into the two labels. shape [65,20] x 2
+            pred_a, pred_b = tf.split(self.answer_test, 2, 1)
+            target_a, target_b = tf.split(self.true_outputs, 2, 1)
 
-        self.pred_argmax_a = tf.argmax(tf.nn.softmax(pred_a), 1)
-        self.pred_argmax_b = tf.argmax(tf.nn.softmax(pred_b), 1)
+            # This is now a legnth 65 tensor, with the node label (half a pair each)
+            # output by the network. shape [65]
+            self.pred_argmax_a = tf.argmax(tf.nn.softmax(pred_a), 1)
+            self.pred_argmax_b = tf.argmax(tf.nn.softmax(pred_b), 1)
 
-        self.target_argmax_a = tf.argmax(target_a, 1)
-        self.target_argmax_b = tf.argmax(target_b, 1)
+            # Same thing for the target
+            self.target_argmax_a = tf.argmax(target_a, 1)
+            self.target_argmax_b = tf.argmax(target_b, 1)
 
-        mistake_a = tf.not_equal(self.pred_argmax_a, self.target_argmax_a)
-        mistake_b = tf.not_equal(self.pred_argmax_b, self.target_argmax_b)
+            # Was each node wrong?
+            mistake_a = tf.not_equal(self.pred_argmax_a, self.target_argmax_a)
+            mistake_b = tf.not_equal(self.pred_argmax_b, self.target_argmax_b)
 
-        mistake = tf.logical_or(mistake_a, mistake_b)
-        error_rate = tf.reduce_sum(tf.cast(mistake, tf.float32))
-        error_rate /= tf.reduce_sum(tf.reduce_max(self.mask_full, reduction_indices=1))
-        #tf.summary.histogram("error", error_rate)
+            # Was either node wrong? shape [65]
+            mistake = tf.logical_or(mistake_a, mistake_b)
+            # Count the number of edges it got wrong. shape []
+            error_count_edges = tf.reduce_sum(tf.cast(mistake, tf.float32))
+            # Count the number of nodes it got wrong
+            error_count_nodes = tf.reduce_sum(mistake_a) + tf.reduce_sum(mistake_b)
 
-        #return tf.summary.histogram("error", error_rate)
-        return error_rate
+            # Strip the padding to get the pure output
+            zero = tf.constant(0, dtype=tf.float32)
+            indices = tf.where(tf.not_equal(self.mask, zero))
+            stripped_a = tf.gather(self.pred_argmax_a, indices)
+            stripped_b = tf.gather(self.pred_argmax_b, indices)
+            final_output = tf.stack([stripped_a, stripped_b], 1)
+
+            #error_rate /= tf.reduce_sum(tf.reduce_max(self.mask_full, reduction_indices=1))
+            #tf.summary.histogram("error", error_rate)
+
+            #return tf.summary.histogram("error", error_rate)
+        return error_count_edges, error_count_nodes, final_output 
 
 
     def get_loss(self):

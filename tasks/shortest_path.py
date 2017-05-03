@@ -6,6 +6,7 @@ import tensorflow as tf
 import random
 import csv
 import utils
+import pickle
 
 from utils import pprint
 
@@ -96,7 +97,7 @@ def train(ntm, config, sess):
 #TODO fix up this run section
 def run(ntm, config, sess):
     np.set_printoptions(threshold=np.nan)
-    if not os.path.isdir("dataset_files"):
+    if not os.path.isdir(config.dataset_dir):
         raise Exception(" [!] Directory dataset_files not found")
 
     # Delimiter flag for start and end
@@ -108,7 +109,26 @@ def run(ntm, config, sess):
     dset = dataset.Dataset(config.graph_size, config.dataset_dir)
     input_set, target_set, lengths, dist, unencoded = dset.get_validation_data(config.val_set_size)
     print(dist)
-    error_sum = 0.0
+
+    # 1) Completely wrong
+    abs_error = {}
+    # 2) Edges wrong in the path
+    edges_error = {}
+    # 3) Nodes wrong in the path
+    nodes_error = {}
+    # 4) Valid paths given the graph
+    valid_paths = {}
+    # 5) Valid edges given the graph
+
+    test_results = [abs_error, edges_error, nodes_error, valid_paths]
+
+    for i in range(1, config.graph_size+1):
+        abs_error[i] = []
+        edges_error[i] = []
+        nodes_error[i] = []
+        valid_paths[i] = []
+
+    # Run the actual test
     for idx, _ in enumerate(input_set):
         # Get inputs
         inp_seq = input_set[idx]
@@ -124,21 +144,68 @@ def run(ntm, config, sess):
             ntm.end_symbol: end_symbol
         })
 
-        error, step, loss = sess.run([ntm.error, ntm.global_step, ntm.loss], feed_dict=feed_dict)
+        error_count_edges, error_count_nodes, final_output, step = sess.run([ntm.error, ntm.global_step, ntm.loss], feed_dict=feed_dict)
 
-        error_sum += error
+        length = lengths[idx]
 
-        #if idx % print_interval == 0:
-        print(
-            "[%d:%d] %.5f %d"
-            % (idx, lengths[idx], error_sum/(idx +1), step))
-        print(error)
-        print(loss)
+        # Record stuff
+        if error_count_edges == 0:
+            abs_error[length].append(0)
+        else:
+            abs_error[length].append(1)
+        edges_error[length].append(error_count_edges)
+        nodes_error[length].append(error_count_nodes)
 
-    final_error = error_sum/config.test_set_size
-    print("Final error rate: %.5f" % final_error)
-    print(dist)
-    with open(config.checkpoint_dir + '/error.csv', 'w', newline='') as csvfile:
-        writer = csv.writer(csvfile, delimiter=' ',
-                            quotechar='|', quoting=csv.QUOTE_MINIMAL)
-        writer.writerow("%.5f" % final_error)
+        print("[{}:{}] {}".format(idx, length, error_count_edges))
+
+
+    with open('{}/results.pkl'.format(config.checkpoint_dir), 'wb') as output:
+        pickle.dump(test_results, output, pickle.HIGHEST_PROTOCOL)
+
+
+    # STATISTICS
+    mean = {"abs":[], "edge":[], "node":[]}
+    sd = {"abs":[], "edge":[], "node":[]}
+    se = {"abs":[], "edge":[], "node":[]}
+
+    abs_overall = []
+    edge_overall = []
+    node_overall = []
+
+    for i in range(1, config.graph_size+1):
+        # Mean
+        mean["abs"].append(np.mean(np.array(abs_error[i])))
+        mean["edge"].append(np.mean(np.array(edges_error[i])))
+        mean["node"].append(np.mean(np.array(nodes_error[i])))
+
+        # Standard deviation
+        sd["abs"].append(np.std(np.array(abs_error[i])))
+        sd["edge"].append(np.std(np.array(edges_error[i])))
+        sd["node"].append(np.std(np.array(nodes_error[i])))
+
+        # Standard error
+
+        # Appending stuff together
+        abs_overall.append(abs_error[i])
+        edge_overall.append(edges_error[i])
+        node_overall.append(nodes_error[i])
+
+
+    mean_abs_overall = np.mean(abs_overall)
+    sd_abs_overall = np.std(abs_overall)
+
+    mean_edge_overall = np.mean(edge_overall)
+    sd_edge_overall = np.std(edge_overall)
+
+    mean_node_overal = np.mean(node_overall)
+    sd_node_overall = np.std(node_overall)
+
+    with open(config.checkpoint_dir + '/error_abs.csv', 'w', newline='') as csvfile:
+        fieldnames = ['mean', 'SD', 'SE']
+        writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
+
+        for i in range(config.graph_size):
+            writer.writerow({'mean':mean['abs'][i], 'SD':sd['abs'], 'SE':0})
+
+        writer.writerow({'mean':mean_abs_overall, 'SD':sd_abs_overall, 'SE':0})
+

@@ -162,5 +162,5 @@ def run(ntm, config, sess):
         pickle.dump(test_results, output, pickle.HIGHEST_PROTOCOL)
 
     print(np.array(pos_error))
-    print(np.sum(pos_error))
+    print(np.sum(pos_error, 0))
 

@@ -144,7 +144,9 @@ def run(ntm, config, sess):
             ntm.end_symbol: end_symbol
         })
 
-        error_count_edges, error_count_nodes, final_output, step = sess.run([ntm.error, ntm.global_step, ntm.loss], feed_dict=feed_dict)
+        errors, step = sess.run([ntm.error, ntm.global_step], feed_dict=feed_dict)
+
+        error_count_edges, error_count_nodes, final_output = errors
 
         length = lengths[idx]
 
@@ -156,7 +158,7 @@ def run(ntm, config, sess):
         edges_error[length].append(error_count_edges)
         nodes_error[length].append(error_count_nodes)
 
-        print("[{}:{}] {}".format(idx, length, error_count_edges))
+        print("[{}:{}] edge:{} nodes:{} output:{}".format(idx, length, error_count_edges, error_count_nodes, final_output))
 
 
     with open('{}/results.pkl'.format(config.checkpoint_dir), 'wb') as output:

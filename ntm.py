@@ -318,6 +318,7 @@ class NTM(object):
 
             # Strip the padding to get the pure output
             zero = tf.constant(0, dtype=tf.float32)
+            indices = tf.where(tf.not_equal(self.mask, zero))
             stripped_a = tf.gather(self.pred_argmax_a, indices)
             stripped_b = tf.gather(self.pred_argmax_b, indices)
             final_output = tf.stack([stripped_a, stripped_b], 1)

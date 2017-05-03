@@ -117,7 +117,7 @@ def run(ntm, config, sess):
     # 3) The actual paths
     paths_output = []
 
-    lengths_count = [0] * config.graph_size - 1
+    lengths_count = [0] * (config.graph_size - 1)
     test_results = [abs_error, pos_error, paths_output]
 
 

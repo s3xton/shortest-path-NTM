@@ -167,7 +167,7 @@ def run(ntm, config, sess):
     percent_pos = []
     running_sum = 0
     for i, lcount in enumerate(lengths_count):
-        percent_pos.append(sum_pos[i] / config.val_set_size - running_sum)
+        percent_pos.append(sum_pos[i] / (config.val_set_size - running_sum))
         running_sum += lcount
 
     print(percent_pos)

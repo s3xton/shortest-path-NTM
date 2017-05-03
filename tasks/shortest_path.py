@@ -212,3 +212,23 @@ def run(ntm, config, sess):
 
         writer.writerow({'mean':mean_abs_overall, 'SD':sd_abs_overall, 'SE':0})
 
+    
+    with open(config.checkpoint_dir + '/error_edge.csv', 'w', newline='') as csvfile:
+        fieldnames = ['mean', 'SD', 'SE']
+        writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
+
+        for i in range(config.graph_size-1):
+            writer.writerow({'mean':mean['edge'][i], 'SD':sd['edge'][i], 'SE':0})
+
+        writer.writerow({'mean':mean_edge_overall, 'SD':sd_edge_overall, 'SE':0})
+
+    
+    with open(config.checkpoint_dir + '/error_node.csv', 'w', newline='') as csvfile:
+        fieldnames = ['mean', 'SD', 'SE']
+        writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
+
+        for i in range(config.graph_size-1):
+            writer.writerow({'mean':mean['node'][i], 'SD':sd['node'][i], 'SE':0})
+
+        writer.writerow({'mean':mean_node_overal, 'SD':sd_node_overall, 'SE':0})
+

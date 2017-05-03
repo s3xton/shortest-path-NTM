@@ -284,7 +284,7 @@ class NTM(object):
         return pred_a, pred_b
 
     @lazy_property
-    def error_count(self):
+    def error(self):
         '''
         @Returns
         error_count_edges: the number of edges that were incorrect.

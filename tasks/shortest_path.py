@@ -158,7 +158,8 @@ def run(ntm, config, sess):
         edges_error[length].append(error_count_edges)
         nodes_error[length].append(error_count_nodes)
 
-        print("[{}:{}] edge:{} nodes:{} output:{}".format(idx, length, error_count_edges, error_count_nodes, final_output))
+        print("[{}:{}] edge:{} nodes:{} output:{}".format(idx, length, error_count_edges, error_count_nodes, list(final_output)))
+        print("    {}".format(unencoded[idx][0].edge_list))
 
 
     with open('{}/results.pkl'.format(config.checkpoint_dir), 'wb') as output:
@@ -187,10 +188,10 @@ def run(ntm, config, sess):
 
         # Standard error
 
-        # Appending stuff together
-        abs_overall.append(abs_error[i])
-        edge_overall.append(edges_error[i])
-        node_overall.append(nodes_error[i])
+        # Stick it all together
+        abs_overall += abs_error[i]
+        edge_overall += edges_error[i]
+        node_overall += nodes_error[i]
 
 
     mean_abs_overall = np.mean(abs_overall)

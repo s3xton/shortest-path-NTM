@@ -314,7 +314,7 @@ class NTM(object):
             # Count the number of edges it got wrong. shape []
             error_count_edges = tf.reduce_sum(tf.cast(mistake, tf.float32))
             # Count the number of nodes it got wrong
-            error_count_nodes = tf.reduce_sum(tf.cast(mistake_a, tf.float32)) + tf.reduce_sum(tf.cast(mistake_b, tf.float32))
+            #error_count_nodes = tf.reduce_sum(tf.cast(mistake_a, tf.float32)) + tf.reduce_sum(tf.cast(mistake_b, tf.float32))
 
             # Strip the padding to get the pure output
             zero = tf.constant(0, dtype=tf.float32)
@@ -323,11 +323,13 @@ class NTM(object):
             stripped_b = tf.gather(self.pred_argmax_b, indices)
             final_output = tf.stack([stripped_a, stripped_b], 1)
 
+            stripped_mistake = tf.gather(tf.cast(mistake, tf.float32), indices)
+
             #error_rate /= tf.reduce_sum(tf.reduce_max(self.mask_full, reduction_indices=1))
             #tf.summary.histogram("error", error_rate)
 
             #return tf.summary.histogram("error", error_rate)
-        return error_count_edges, error_count_nodes, final_output 
+        return error_count_edges, stripped_mistake, final_output
 
 
     def get_loss(self):

@@ -112,21 +112,15 @@ def run(ntm, config, sess):
 
     # 1) Completely wrong
     abs_error = {}
-    # 2) Edges wrong in the path
-    edges_error = {}
-    # 3) Nodes wrong in the path
-    nodes_error = {}
-    # 4) Valid paths given the graph
-    valid_paths = {}
-    # 5) Valid edges given the graph
+    # 2) Where they were wrong
+    pos_error = []
+    # 3) The actual paths
+    paths_output = []
 
-    test_results = [abs_error, edges_error, nodes_error, valid_paths]
+    test_results = [abs_error, pos_error, paths_output]
 
     for i in range(1, config.graph_size):
         abs_error[i] = []
-        edges_error[i] = []
-        nodes_error[i] = []
-        valid_paths[i] = []
 
     # Run the actual test
     for idx, _ in enumerate(input_set):
@@ -146,7 +140,7 @@ def run(ntm, config, sess):
 
         errors, step = sess.run([ntm.error, ntm.global_step], feed_dict=feed_dict)
 
-        error_count_edges, error_count_nodes, final_output = errors
+        error_count_edges, stripped_mistake, final_output = errors
 
         length = lengths[idx]
 
@@ -155,80 +149,18 @@ def run(ntm, config, sess):
             abs_error[length].append(0)
         else:
             abs_error[length].append(1)
-        edges_error[length].append(error_count_edges)
-        nodes_error[length].append(error_count_nodes)
 
-        print("[{}:{}] edge:{} nodes:{} output:{}".format(idx, length, error_count_edges, error_count_nodes, list(final_output)))
+        final_output = list(map(list, list(final_output)))
+        paths_output.append(final_output)
+        pos_error.append(stripped_mistake)
+
+        print("[{}:{}] error:{} output:{}".format(idx, length, error_count_edges, final_output))
         print("    {}".format(unencoded[idx][0].edge_list))
 
 
     with open('{}/results.pkl'.format(config.checkpoint_dir), 'wb') as output:
         pickle.dump(test_results, output, pickle.HIGHEST_PROTOCOL)
 
-
-    # STATISTICS
-    mean = {"abs":[], "edge":[], "node":[]}
-    sd = {"abs":[], "edge":[], "node":[]}
-    se = {"abs":[], "edge":[], "node":[]}
-
-    abs_overall = []
-    edge_overall = []
-    node_overall = []
-
-    for i in range(1, config.graph_size):
-        # Mean
-        mean["abs"].append(np.mean(np.array(abs_error[i])))
-        mean["edge"].append(np.mean(np.array(edges_error[i])))
-        mean["node"].append(np.mean(np.array(nodes_error[i])))
-
-        # Standard deviation
-        sd["abs"].append(np.std(np.array(abs_error[i])))
-        sd["edge"].append(np.std(np.array(edges_error[i])))
-        sd["node"].append(np.std(np.array(nodes_error[i])))
-
-        # Standard error
-
-        # Stick it all together
-        abs_overall += abs_error[i]
-        edge_overall += edges_error[i]
-        node_overall += nodes_error[i]
-
-
-    mean_abs_overall = np.mean(abs_overall)
-    sd_abs_overall = np.std(abs_overall)
-
-    mean_edge_overall = np.mean(edge_overall)
-    sd_edge_overall = np.std(edge_overall)
-
-    mean_node_overal = np.mean(node_overall)
-    sd_node_overall = np.std(node_overall)
-
-    with open(config.checkpoint_dir + '/error_abs.csv', 'w', newline='') as csvfile:
-        fieldnames = ['mean', 'SD', 'SE']
-        writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
-
-        for i in range(config.graph_size-1):
-            writer.writerow({'mean':mean['abs'][i], 'SD':sd['abs'][i], 'SE':0})
-
-        writer.writerow({'mean':mean_abs_overall, 'SD':sd_abs_overall, 'SE':0})
-
-    
-    with open(config.checkpoint_dir + '/error_edge.csv', 'w', newline='') as csvfile:
-        fieldnames = ['mean', 'SD', 'SE']
-        writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
-
-        for i in range(config.graph_size-1):
-            writer.writerow({'mean':mean['edge'][i], 'SD':sd['edge'][i], 'SE':0})
-
-        writer.writerow({'mean':mean_edge_overall, 'SD':sd_edge_overall, 'SE':0})
-
-    
-    with open(config.checkpoint_dir + '/error_node.csv', 'w', newline='') as csvfile:
-        fieldnames = ['mean', 'SD', 'SE']
-        writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
-
-        for i in range(config.graph_size-1):
-            writer.writerow({'mean':mean['node'][i], 'SD':sd['node'][i], 'SE':0})
-
-        writer.writerow({'mean':mean_node_overal, 'SD':sd_node_overall, 'SE':0})
+    print(np.array(pos_error))
+    print(np.sum(np.array(pos_error)))
 

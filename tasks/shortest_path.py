@@ -161,6 +161,6 @@ def run(ntm, config, sess):
     with open('{}/results.pkl'.format(config.checkpoint_dir), 'wb') as output:
         pickle.dump(test_results, output, pickle.HIGHEST_PROTOCOL)
 
-    print(np.array(pos_error))
-    print(np.sum(np.array(pos_error)))
+    print(pos_error)
+    print(np.sum(pos_error))
 

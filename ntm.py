@@ -314,7 +314,7 @@ class NTM(object):
             # Count the number of edges it got wrong. shape []
             error_count_edges = tf.reduce_sum(tf.cast(mistake, tf.float32))
             # Count the number of nodes it got wrong
-            error_count_nodes = tf.reduce_sum(tf.cast(mistake_a), tf.float32) + tf.reduce_sum(tf.cast(mistake_b, tf.float32))
+            error_count_nodes = tf.reduce_sum(tf.cast(mistake_a, tf.float32)) + tf.reduce_sum(tf.cast(mistake_b, tf.float32))
 
             # Strip the padding to get the pure output
             zero = tf.constant(0, dtype=tf.float32)

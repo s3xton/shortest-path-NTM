@@ -162,12 +162,12 @@ def run(ntm, config, sess):
         pickle.dump(test_results, output, pickle.HIGHEST_PROTOCOL)
 
     print(np.sum(pos_error, 0))
-
+    val_set_size = 40000
     sum_pos = np.sum(pos_error, 0)
     percent_pos = []
     running_sum = 0
     for i, lcount in enumerate(lengths_count):
-        percent_pos.append(sum_pos[i] / (config.val_set_size - running_sum))
+        percent_pos.append(sum_pos[i] / (val_set_size - running_sum))
         running_sum += lcount
 
     print(percent_pos)
@@ -176,7 +176,7 @@ def run(ntm, config, sess):
         fieldnames = ['complete', 'first', 'second', 'third', 'fourth', 'fifth']
         writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
 
-        writer.writerow({'complete':np.sum(abs_error)/config.val_set_size,
+        writer.writerow({'complete':np.sum(abs_error)/val_set_size,
                          'first':percent_pos[0],
                          'second':percent_pos[1],
                          'third':percent_pos[2],

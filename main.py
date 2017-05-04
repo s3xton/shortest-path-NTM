@@ -48,7 +48,11 @@ def generate_hyperparams(config):
     decay = sample_loguniform(0.001, 1)
     controller_dim = np.around(sample_loguniform(100, 600))
     controller_layers = random.choice([1, 2, 3])
-    mem_size = random.choice([128, 256, 512])
+    mem_size = random.choice([128, 256])
+
+    # Crash protection
+    if controller_layers == 3:
+        mem_size = 128
 
     hyper_params = {'l2':l2_beta,
                     'lr':lr,

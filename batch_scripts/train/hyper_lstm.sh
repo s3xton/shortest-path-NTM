@@ -1,4 +1,5 @@
-for ((i=1; i <= 5; i++))
+cd ..
+for ((i=$1; i <= $1 + 5; i++))
 do
-    python3 /home/sexton/Documents/Dissertation/main.py --is_LSTM_mode True --is_train True --rand_hyper True --continue_train False --train_set_size 40000 --checkpoint_dir "/home/conor/Documents/Dissertation/checkpoint_lstm/hyper/$i" --dataset_dir "/home/conor/Documents/Dissertation/dataset_files"
+    python3 main.py --is_LSTM_mode True --is_train True --rand_hyper True --continue_train False --train_set_size 40000 --checkpoint_dir "checkpoint_lstm/hyper/$i" --dataset_dir "dataset_files"
 done

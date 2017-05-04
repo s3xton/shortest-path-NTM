@@ -5,6 +5,7 @@ import tensorflow as tf
 import numpy as np
 import random
 import csv
+import os
 from ntm_cell import NTMCell
 from ntm import NTM
 
@@ -56,6 +57,10 @@ def generate_hyperparams(config):
                     'c_dim':controller_dim,
                     'c_layer':controller_layers,
                     'mem_size': mem_size}
+
+    if not os.path.isdir(config.checkpoint_dir):
+        print(" [!] Directory %s not found. Creating." % config.checkpoint_dir)
+        os.makedirs(config.checkpoint_dir)
 
     with open(config.checkpoint_dir + '/config.csv', 'w', newline='') as csvfile:
         fieldnames = ['l2', 'lr', 'momentum', 'decay', 'c_dim', 'c_layer', 'mem_size']

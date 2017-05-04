@@ -1,5 +1,6 @@
 import os
 import time
+import sys
 import dataset
 import numpy as np
 import tensorflow as tf
@@ -87,6 +88,10 @@ def train(ntm, config, sess):
             print(np.array(unencoded[idx][3]))
             print("Answer:")
             print(np.array(answer))
+
+        if np.isnan(cost):
+            print( "[!] Loss gone to NaN! Exiting.")
+            sys.exit()
 
 
     print(dist)

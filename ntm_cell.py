@@ -13,7 +13,7 @@ from ops import *
 
 class NTMCell(object):
     def __init__(self, input_dim, output_dim,
-                 mem_size=128, mem_dim=20, controller_dim=100,
+                 mem_size=128, mem_dim=22, controller_dim=100,
                  controller_layer_size=1, shift_range=1,
                  write_head_size=1, read_head_size=1, is_LSTM_mode=False):
         """Initialize the parameters for an NTM cell.

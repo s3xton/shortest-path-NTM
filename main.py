@@ -2,10 +2,14 @@ from __future__ import absolute_import
 
 import importlib
 import tensorflow as tf
+import numpy as np
+import random
+import csv
 from ntm_cell import NTMCell
 from ntm import NTM
 
 from utils import pp
+from utils import sample_loguniform
 
 flags = tf.app.flags
 flags.DEFINE_string("task", "shortest_path", "Task to run [copy, recall, shortest_path]")
@@ -33,27 +37,77 @@ flags.DEFINE_integer("test_set_size", 100, "Number of runs to perform when testi
 flags.DEFINE_boolean("is_LSTM_mode", False, "Toggle for using LSTM mode (memory off)")
 flags.DEFINE_string("dataset_dir", "dataset_files", "Directory from which to load the dataset")
 flags.DEFINE_float("beta", 0.01, "The beta value used in L2 regularisation")
+flags.DEFINE_boolean("rand_hyper", False, "Toggle for hyperparameter randomisation")
 FLAGS = flags.FLAGS
 
+def generate_hyperparams(config):
+    l2_beta = random.choice([0, sample_loguniform(0.0001, 0.0000001)])
+    lr = sample_loguniform(0.001, 10)
+    momentum = sample_loguniform(0.001, 1)
+    decay = sample_loguniform(0.001, 1)
+    controller_dim = np.around(sample_loguniform(100, 2000))
+    controller_layers = random.choice([1, 2, 3])
+    mem_size = random.choice([128, 256, 512])
+
+    hyper_params = {'l2':l2_beta,
+                    'lr':lr,
+                    'momentum':momentum,
+                    'decay':decay,
+                    'c_dim':controller_dim,
+                    'c_layer':controller_layers,
+                    'mem_size': mem_size}
+
+    with open(config.checkpoint_dir + '/config.csv', 'w', newline='') as csvfile:
+        fieldnames = ['l2', 'lr', 'momentum', 'decay', 'c_dim', 'c_layer', 'mem_size']
+        writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
+
+        writer.writerow(hyper_params)
+
+    return hyper_params
 
 def create_ntm(config, sess, **ntm_args):
-    cell = NTMCell(
-        input_dim=config.input_dim,
-        output_dim=config.output_dim,
-        controller_layer_size=config.controller_layer_size,
-        controller_dim=config.controller_dim,
-        write_head_size=config.write_head_size,
-        read_head_size=config.read_head_size,
-        is_LSTM_mode=config.is_LSTM_mode)
-    scope = ntm_args.pop('scope', 'NTM-%s' % config.task)
+    if config.rand_hyper:
+        hyper_params = generate_hyperparams(config)
+        print(" [*] Hyperparameters: {}".format(hyper_params))
+        cell = NTMCell(
+            input_dim=config.input_dim,
+            output_dim=config.output_dim,
+            controller_layer_size=hyper_params["c_layer"],
+            controller_dim=hyper_params["c_dim"],
+            mem_size=hyper_params["mem_size"],
+            write_head_size=config.write_head_size,
+            read_head_size=config.read_head_size,
+            is_LSTM_mode=config.is_LSTM_mode)
+        scope = ntm_args.pop('scope', 'NTM-%s' % config.task)
 
-    # Description + query + plan + answer
-    min_length = (config.min_size - 1) + 1 + config.plan_length + (config.min_size - 1)
-    max_length = int(((config.max_size * (config.max_size - 1)/2) +
-                  1 + config.plan_length + (config.max_size - 1)))
-    ntm = NTM(
-        cell, sess, min_length, max_length, config.min_size, config.max_size,
-        scope=scope, **ntm_args)
+        # Description + query + plan + answer
+        min_length = (config.min_size - 1) + 1 + config.plan_length + (config.min_size - 1)
+        max_length = int(((config.max_size * (config.max_size - 1)/2) +
+                    1 + config.plan_length + (config.max_size - 1)))
+        ntm = NTM(
+            cell, sess, min_length, max_length, config.min_size, config.max_size,
+            scope=scope, **ntm_args,
+            lr=hyper_params["lr"], momentum=hyper_params["momentum"],
+            decay=hyper_params["decay"], beta=hyper_params["l2"])
+
+    else:
+        cell = NTMCell(
+            input_dim=config.input_dim,
+            output_dim=config.output_dim,
+            controller_layer_size=config.controller_layer_size,
+            controller_dim=config.controller_dim,
+            write_head_size=config.write_head_size,
+            read_head_size=config.read_head_size,
+            is_LSTM_mode=config.is_LSTM_mode)
+        scope = ntm_args.pop('scope', 'NTM-%s' % config.task)
+
+        # Description + query + plan + answer
+        min_length = (config.min_size - 1) + 1 + config.plan_length + (config.min_size - 1)
+        max_length = int(((config.max_size * (config.max_size - 1)/2) +
+                    1 + config.plan_length + (config.max_size - 1)))
+        ntm = NTM(
+            cell, sess, min_length, max_length, config.min_size, config.max_size,
+            scope=scope, **ntm_args)
     return cell, ntm
 
 

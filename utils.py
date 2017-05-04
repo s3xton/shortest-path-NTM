@@ -76,3 +76,9 @@ def matmul(x, y):
         return tf.matmul(x, y)
     except:
         return tf.reshape(tf.matmul(x, tf.reshape(y, [-1, 1])), [-1])
+
+def sample_loguniform(start, end):
+    logstart = np.log(start)
+    logend = np.log(end)
+    sample = np.random.uniform(logstart, logend)
+    return np.around(np.exp(sample), 4)

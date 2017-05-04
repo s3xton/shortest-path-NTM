@@ -81,4 +81,4 @@ def sample_loguniform(start, end):
     logstart = np.log(start)
     logend = np.log(end)
     sample = np.random.uniform(logstart, logend)
-    return np.around(np.exp(sample), 4)
+    return np.exp(sample)

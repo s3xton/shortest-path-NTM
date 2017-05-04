@@ -42,11 +42,11 @@ flags.DEFINE_boolean("rand_hyper", False, "Toggle for hyperparameter randomisati
 FLAGS = flags.FLAGS
 
 def generate_hyperparams(config):
-    l2_beta = random.choice([0, sample_loguniform(0.0001, 0.0000001)])
-    lr = sample_loguniform(0.001, 10)
+    l2_beta = random.choice([0, sample_loguniform(0.0000001, 0.0001)])
+    lr = sample_loguniform(0.001, 1)
     momentum = sample_loguniform(0.001, 1)
     decay = sample_loguniform(0.001, 1)
-    controller_dim = np.around(sample_loguniform(100, 2000))
+    controller_dim = np.around(sample_loguniform(100, 600))
     controller_layers = random.choice([1, 2, 3])
     mem_size = random.choice([128, 256, 512])
 

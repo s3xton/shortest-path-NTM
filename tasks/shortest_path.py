@@ -49,6 +49,7 @@ def train(ntm, config, sess):
     # Start training
     print(" [*] Starting training")
     start_time = time.time()
+    nan_count = 0
     for idx, _ in enumerate(input_set):
         # Get inputs
         inp_seq = input_set[idx]
@@ -90,12 +91,16 @@ def train(ntm, config, sess):
             print(np.array(answer))
 
         if np.isnan(cost):
-            print( "[!] Loss gone to NaN! Exiting.")
-            with open(config.checkpoint_dir + '/nan.csv', 'w', newline='') as csvfile:
-                fieldnames = ['complete']
-                writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
-                writer.writerow({'step':step})
-            sys.exit()
+            nan_count += 1
+            if nan_count > 100:
+                print( "[!] Loss gone to NaN! Exiting.")
+                with open(config.checkpoint_dir + '/nan.csv', 'w', newline='') as csvfile:
+                    fieldnames = ['complete']
+                    writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
+                    writer.writerow({'step':step})
+                sys.exit()
+        else:
+            nan_count = 0
 
 
     print(dist)

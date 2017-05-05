@@ -95,7 +95,7 @@ def train(ntm, config, sess):
             if nan_count > 10:
                 print( "[!] Loss gone to NaN! Exiting.")
                 with open(config.checkpoint_dir + '/nan.csv', 'w', newline='') as csvfile:
-                    fieldnames = ['complete']
+                    fieldnames = ['step']
                     writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
                     writer.writerow({'step':step})
                 sys.exit()

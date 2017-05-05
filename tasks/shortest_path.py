@@ -92,7 +92,7 @@ def train(ntm, config, sess):
 
         if np.isnan(cost):
             nan_count += 1
-            if nan_count > 100:
+            if nan_count > 10:
                 print( "[!] Loss gone to NaN! Exiting.")
                 with open(config.checkpoint_dir + '/nan.csv', 'w', newline='') as csvfile:
                     fieldnames = ['complete']

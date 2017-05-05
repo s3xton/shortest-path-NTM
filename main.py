@@ -74,9 +74,22 @@ def generate_hyperparams(config):
 
     return hyper_params
 
+def load_hyperparamters(config):
+    with open(config.checkpoint_dir + '/config.csv') as csvfile:
+        reader = csv.DictReader(csvfile)
+        for row in reader:
+            hyper_params = row
+
+    return hyper_params
+
+
 def create_ntm(config, sess, **ntm_args):
     if config.rand_hyper:
-        hyper_params = generate_hyperparams(config)
+        hyper_params = {}
+        if config.is_test:
+            hyper_params = load_hyperparamters(config)
+        else:
+            hyper_params = generate_hyperparams(config)
         print(" [*] Hyperparameters: {}".format(hyper_params))
         cell = NTMCell(
             input_dim=config.input_dim,

@@ -75,6 +75,7 @@ def generate_hyperparams(config):
     return hyper_params
 
 def load_hyperparamters(config):
+    hyper_params = {}
     with open(config.checkpoint_dir + '/config.csv') as csvfile:
         reader = csv.DictReader(csvfile)
         for row in reader:

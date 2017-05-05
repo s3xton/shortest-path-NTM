@@ -75,12 +75,20 @@ def generate_hyperparams(config):
     return hyper_params
 
 def load_hyperparamters(config):
-    hyper_params = {}
-    with open(config.checkpoint_dir + '/config.csv') as csvfile:
-        reader = csv.DictReader(csvfile)
+    read_list = []
+    with open(config.checkpoint_dir + '/config.csv', newline='') as file: 
+        reader = csv.reader(file, delimiter=",", quotechar="|") 
         for row in reader:
-            hyper_params = row
+            for elem in row:
+                read_list.append(float(elem))
 
+    hyper_params = {'l2':read_list[0],
+                    'lr':read_list[1],
+                    'momentum':read_list[2],
+                    'decay':read_list[3],
+                    'c_dim':read_list[4],
+                    'c_layer':read_list[5],
+                    'mem_size': read_list[6]}
     return hyper_params
 
 

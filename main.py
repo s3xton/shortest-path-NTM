@@ -86,9 +86,9 @@ def load_hyperparamters(config):
                     'lr':read_list[1],
                     'momentum':read_list[2],
                     'decay':read_list[3],
-                    'c_dim':read_list[4],
-                    'c_layer':read_list[5],
-                    'mem_size': read_list[6]}
+                    'c_dim':int(read_list[4]),
+                    'c_layer':int(read_list[5]),
+                    'mem_size': int(read_list[6])}
     return hyper_params
 
 

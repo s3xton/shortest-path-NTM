@@ -94,7 +94,7 @@ def Linear(input_, output_size, stddev=0.5,
         b_name = "%s_b" % name if name else None
 
         w = tf.get_variable(w_name, [input_size, output_size], tf.float32,
-                            tf.contrib.layers.xavier_initializer())
+                            tf.random_normal_initializer(stddev=stddev))
         mul = tf.matmul(input_, w)
 
         if is_range:

@@ -125,7 +125,7 @@ def run(ntm, config, sess):
         input_set, target_set, lengths, dist, unencoded = dset.get_validation_data(config.val_set_size)
         print(dist)
     elif config.is_final_test:
-        input_set, target_set, lengths, dist, unencoded = dset.get_test_data(config.test_set_size)
+        input_set, target_set, lengths, dist, unencoded = dset.get_test_data(0)
         print(dist)
 
     # 1) Completely wrong

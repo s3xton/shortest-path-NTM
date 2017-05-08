@@ -35,7 +35,7 @@ flags.DEFINE_integer("graph_size", 6, "The number of nodes in the graphs being i
 flags.DEFINE_integer("plan_length", 10, "Length of planning phase")
 flags.DEFINE_integer("train_set_size", 1000, "Number of runs to perform when training")
 flags.DEFINE_integer("val_set_size", 1000, "Number of runs to perform when training")
-flags.DEFINE_integer("test_set_size", 100, "Number of runs to perform when testing accuracy")
+flags.DEFINE_integer("test_set_size", 0, "Number of runs to perform when testing accuracy")
 flags.DEFINE_boolean("is_LSTM_mode", False, "Toggle for using LSTM mode (memory off)")
 flags.DEFINE_string("dataset_dir", "dataset_files", "Directory from which to load the dataset")
 flags.DEFINE_float("beta", 0.01, "The beta value used in L2 regularisation")

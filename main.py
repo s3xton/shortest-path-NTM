@@ -24,7 +24,8 @@ flags.DEFINE_integer("read_head_size", 1, "The number of read head [1]")
 flags.DEFINE_string("checkpoint_dir", "checkpoint", "Directory name to save the checkpoints [checkpoint]")
 flags.DEFINE_string("summary_dir", "checkpoint", "Directory name to save the checkpoints [checkpoint]")
 flags.DEFINE_boolean("is_train", False, "True for training, False for testing [False]")
-flags.DEFINE_boolean("is_test", False, "True for training, False for testing [False]")
+flags.DEFINE_boolean("is_final_test", False, "True for final test, False for validation testing [False]")
+flags.DEFINE_boolean("is_test", False, "True for validation testing, False for training [False]")
 flags.DEFINE_boolean("continue_train", None, "True to continue training from saved checkpoint. False for restarting. None for automatic [None]")
 
 # My config vars

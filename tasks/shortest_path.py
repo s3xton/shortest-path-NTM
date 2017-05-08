@@ -121,8 +121,12 @@ def run(ntm, config, sess):
 
     # Load the dataset from the file and get training sets
     dset = dataset.Dataset(config.graph_size, config.dataset_dir)
-    input_set, target_set, lengths, dist, unencoded = dset.get_validation_data(config.val_set_size)
-    print(dist)
+    if config.is_test:
+        input_set, target_set, lengths, dist, unencoded = dset.get_validation_data(config.val_set_size)
+        print(dist)
+    elif config.is_final_test:
+        input_set, target_set, lengths, dist, unencoded = dset.get_test_data(config.test_set_size)
+        print(dist)
 
     # 1) Completely wrong
     abs_error = []#[0] * config.graph_size - 1

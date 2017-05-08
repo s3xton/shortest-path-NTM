@@ -19,6 +19,8 @@ class Dataset:
             with open("{}/test/bin_{}.pkl".format(dataset_dir, i), 'rb') as pickled_dataset:
                 self.test_set_bins.append(pickle.load(pickled_dataset))
 
+    def get_test_data(self, test_size=0):
+        return self.get_encoded_data(self.test_set_bins, test_size)
 
     def get_validation_data(self, val_size=0):
         return self.get_encoded_data(self.val_set_bins, val_size)

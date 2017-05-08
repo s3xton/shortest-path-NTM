@@ -67,13 +67,30 @@ def calc_percent_consec(result_dir):
 
     print((1 - overall_sum/5)*100)
 
+def calc_abs(result_dir):
+    with open("test_pen/{}/results.pkl".format(result_dir), 'rb') as pickled_dataset:
+        results = pickle.load(pickled_dataset)
+
+    return np.sum(results[0])
+
+def calc_conf(result_dir):
+    with open("test_pen/{}/results.pkl".format(result_dir), 'rb') as pickled_dataset:
+        results = pickle.load(pickled_dataset)
+    
+    m1 = np.mean(results[0])
+    s1 = np.std(results[0])
+    ci = 1.96 *(s1/np.sqrt(40000))
+
+    return ci
+    
+
 def compare_perf():
     result_pos_bins = []
     for i in range(1, 6):
         results = []
         with open("learn_curve/{}0k/results.pkl".format(i), 'rb') as pickled_dataset:
             results = pickle.load(pickled_dataset)
-        result_pos_bins.append(results[1])
+        result_pos_bins.append(results[0])
 
     scores_bins = []
     for i in range(1, 6):
@@ -95,8 +112,6 @@ def get_scores(result_pos_bins, path_length):
         scores.append(better_count)
 
     return scores
-
-
 
 def better(set1, set2, path_length):
     start = 8000 * (path_length-1)
@@ -126,3 +141,48 @@ def pooled_sd(n1, n2, s1, s2):
     denominator = n1+n2-2
     pooled = np.sqrt(numerator/denominator)
     return pooled
+
+
+def ttest_2sample(result_dir1, result_dir2):
+    with open("test_pen/{}/results.pkl".format(result_dir1), 'rb') as pickled_dataset:
+        results1 = pickle.load(pickled_dataset)
+
+    with open("test_pen/{}/results.pkl".format(result_dir2), 'rb') as pickled_dataset:
+        results2 = pickle.load(pickled_dataset)
+
+    m1 = np.mean(results1[0])
+    m2 = np.mean(results2[0])
+    s1 = np.std(results1[0])
+    s2 = np.std(results2[0])
+
+    n1 = n2 = 40000
+    numerator = ((s1**2)/n1 + (s2**2)/n2)**2
+    denominator = ((1/(n1-1)) * (s1**2/n1)**2) + ((1/(n2-1)) * (s2**2/n2)**2)
+    df = numerator/denominator
+
+    t = (m1 - m2) / np.sqrt((s1**2)/n1 + (s2**2)/n2)
+
+    return t, df
+
+def ttest_paired(result_dir1, result_dir2):
+    with open("test_pen/{}/results.pkl".format(result_dir1), 'rb') as pickled_dataset:
+        results1 = pickle.load(pickled_dataset)
+
+    with open("test_pen/{}/results.pkl".format(result_dir2), 'rb') as pickled_dataset:
+        results2 = pickle.load(pickled_dataset)
+
+    set1 = results1[0]
+    set2 = results2[0]
+
+    dif = []
+    for i, _ in enumerate(set1):
+        dif.append(set1[i] - set2[i])
+
+    m_dif = np.mean(dif)
+    sd_dif = np.std(dif)
+    se_dif = sd_dif/np.sqrt(40000)
+    df = 40000 -1
+
+    t = m_dif/se_dif
+
+    return t, df

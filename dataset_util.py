@@ -105,7 +105,7 @@ def build_intrinsic(total_size, graph_size):
                         path,
                         plength)
 
-            if not collision(element_dict, element) and plength == graph_size -1:
+            if not collision(element_dict, element):
                 unique = True
             else:
                 collision_count += 1

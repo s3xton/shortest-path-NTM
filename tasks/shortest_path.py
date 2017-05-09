@@ -66,11 +66,10 @@ def train(ntm, config, sess):
         })
 
         # Run the NTM
-        _, cost, step, summary, answer = sess.run([ntm.optim,
+        _, cost, step, summary = sess.run([ntm.optim,
                                            ntm.get_loss(),
                                            ntm.global_step,
-                                           ntm.merged,
-                                           ntm.answer_train], feed_dict=feed_dict)
+                                           ntm.merged], feed_dict=feed_dict)
 
         # Save stuff, print stuff
         if (idx+1) % 10000 == 0:
@@ -84,11 +83,11 @@ def train(ntm, config, sess):
             #utils.pprint(states[-1]['M'])
             train_writer.add_summary(summary, step)
 
-        if cost < 0.01:
-            print("True:")
-            print(np.array(unencoded[idx][3]))
-            print("Answer:")
-            print(np.array(answer))
+        #if cost < 0.01:
+        #    print("True:")
+        #    print(np.array(unencoded[idx][3]))
+        #    print("Answer:")
+         #   print(np.array(answer))
 
         if np.isnan(cost):
             nan_count += 1

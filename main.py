@@ -44,7 +44,7 @@ FLAGS = flags.FLAGS
 
 def generate_hyperparams(config):
     l2_beta = random.choice([0, sample_loguniform(0.0000001, 0.0001)])
-    lr = sample_loguniform(0.001, 1)
+    lr = sample_loguniform(0.0001, 0.001)
     momentum = sample_loguniform(0.001, 1)
     decay = sample_loguniform(0.001, 1)
     controller_dim = np.around(sample_loguniform(100, 600))

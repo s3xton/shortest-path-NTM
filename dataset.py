@@ -1,6 +1,7 @@
 import random
 import math
 import pickle
+import os
 import graph as gr
 
 
@@ -12,10 +13,18 @@ class Dataset:
         self.test_set_bins = []
 
         for i in range(1, graph_size):
-            with open("{}/train/bin_{}.pkl".format(dataset_dir, i), 'rb') as pickled_dataset:
-                self.train_set_bins.append(pickle.load(pickled_dataset))
-            with open("{}/val/bin_{}.pkl".format(dataset_dir, i), 'rb') as pickled_dataset:
-                self.val_set_bins.append(pickle.load(pickled_dataset))
+            if os.path.exists("{}/train".format(dataset_dir)):
+                with open("{}/train/bin_{}.pkl".format(dataset_dir, i), 'rb') as pickled_dataset:
+                    self.train_set_bins.append(pickle.load(pickled_dataset))
+            else:
+                print(" [!] No training data!")
+
+            if os.path.exists("{}/val".format(dataset_dir)):
+                with open("{}/val/bin_{}.pkl".format(dataset_dir, i), 'rb') as pickled_dataset:
+                    self.val_set_bins.append(pickle.load(pickled_dataset))
+            else:
+                print(" [!] No validation data!")
+
             with open("{}/test/bin_{}.pkl".format(dataset_dir, i), 'rb') as pickled_dataset:
                 self.test_set_bins.append(pickle.load(pickled_dataset))
 
@@ -43,6 +52,7 @@ class Dataset:
             input_set_unencoded = []
             for i in range(0, len(draw_set)):
                 path_bin = draw_set[i]
+                print(len(path_bin))
                 # temporary input set used to store before sorting
                 temp_elengths = []
                 temp_plengths = []

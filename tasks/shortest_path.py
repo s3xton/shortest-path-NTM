@@ -180,7 +180,10 @@ def run(ntm, config, sess):
         pickle.dump(test_results, output, pickle.HIGHEST_PROTOCOL)
 
     print(np.sum(pos_error, 0))
-    val_set_size = 40000
+    if config.is_final_test:
+        val_set_size = 70000
+    else:
+        val_set_size = 40000
     sum_pos = np.sum(pos_error, 0)
     percent_pos = []
     running_sum = 0

@@ -71,7 +71,7 @@ def build_dataset_file(train_size,
                         element_dict[elem_tuple] = 1
                         inserted = True
                         # If the bin is full, pickle it and delete it
-                        if len(dset[key][plength]) == bin_sizes[key]:
+                        if len(dset[key][plength]) >= bin_sizes[key]:
                             print("\n[*] Pickling {} bin_{}".format(key, plength))
                             with open('dataset_files/{}/bin_{}.pkl'.format(key, plength), 'wb') as output:
                                 pickle.dump(dset[key][plength], output, pickle.HIGHEST_PROTOCOL)
@@ -84,40 +84,71 @@ def build_dataset_file(train_size,
               %(j+1, total_size, collision_count, size_excess),
               end="\r")
 
-def build_intrinsic(total_size, graph_size):
-    dset = [0] * (graph_size+1)
+
+def build_intrinsic(test_size,
+                    graph_size,
+                    edge_number=0):
+
+    directory = "larger_datasets/{}-node".format(graph_size)
+    if not os.path.exists(directory):
+        os.makedirs(directory)
+        os.makedirs(directory+"/test")
+
+    test_bins = {}
+    dset = {"test":test_bins}
+
+    for i in range(1, graph_size):
+        test_bins[i] = []
+
+    total_size = test_size
+
     collision_count = 0
     size_excess = 0
     element_dict = {}
-    
     for j in range(total_size):
-        unique = False
-        # Get a unique element
-        while not unique:
-            graph = gr.Graph(graph_size, 0)
-            path = []
-            start, end = random.sample(graph.nodes, 2)
-            path = shortest_path(graph, start, end)
-            plength = len(path)
-            element = (graph,
-                        start,
-                        end,
-                        path,
-                        plength)
+        inserted = False
+        while not inserted:
+            unique = False
+            # Get a unique element
+            while not unique:
+                graph = gr.Graph(graph_size, edge_number)
+                path = []
+                start, end = random.sample(graph.nodes, 2)
+                path = shortest_path(graph, start, end)
+                plength = len(path)
+                element = (graph,
+                           start,
+                           end,
+                           path,
+                           plength)
 
-            if not collision(element_dict, element):
-                unique = True
-            else:
-                collision_count += 1
+                if not collision(element_dict, element):
+                    unique = True
+                else:
+                    collision_count += 1
 
-
-            dset[plength] += 1
+            # Distribute it into the various num_bins
+            for key in dset.keys():
+                if not inserted:
+                    if plength in dset[key]:
+                        dset[key][plength].append(element)
+                        adj = element[0].adjacency
+                        elem_tuple = (adj, element[1], element[2], element[3], element[4])
+                        element_dict[elem_tuple] = 1
+                        inserted = True
+                        
+            if not inserted:
+                size_excess += 1
 
         print("[*] Progress: %d/%d, collisions: %d, size excess:%d"
               %(j+1, total_size, collision_count, size_excess),
               end="\r")
 
-    print(dset)
+    for key in dset.keys():
+        for plength in dset[key]:
+            print("\n[*] Pickling {} bin_{}".format(key, plength))
+            with open('larger_datasets/{}-node/{}/bin_{}.pkl'.format(graph_size, key, plength), 'wb') as output:
+                pickle.dump(dset[key][plength], output, pickle.HIGHEST_PROTOCOL)
 
 def dijkstra(graph, start):
     """

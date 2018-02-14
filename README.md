@@ -1,7 +1,7 @@
 
 # shortest-path-NTM
 
-Leanring the shortest path problem with a Neural Turing Machine
+Learning the shortest path problem with a Neural Turing Machine
 
 Work in progress..
 
